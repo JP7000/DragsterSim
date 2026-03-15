@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CO₂ Dragster Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg: #000000;
+  --surface: #0a0f14;
+  --panel: #0d1520;
+  --border: #1a2a3c;
+  --border2: #1f3048;
+  --accent: #00eeff;
+  --accent2: #ff7a1a;
+  --green: #00ff88;
+  --red: #ff3355;
+  --yellow: #ffd600;
+  --text: #dde8f0;
+  --muted: #6a8498;
+  --muted2: #2a3a4a;
+  --font-display: 'Orbitron', 'Arial Black', sans-serif;
+  --font-mono: 'Space Mono', 'Courier New', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  min-height: 100vh;
+}
+
+.header {
+  padding: 2rem 2rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.logo { display:flex; flex-direction:column; gap:.55rem; }
+.logo-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 900;
+  letter-spacing: .12em;
+  color: var(--accent);
+  line-height:1;
+  text-shadow: 0 0 30px rgba(0,238,255,0.5);
+}
+.logo-sub {
+  font-size: .65rem;
+  letter-spacing: .3em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.5rem;
+}
+@media(max-width:900px) {
+  .app { grid-template-columns: 1fr; padding: 1rem; }
+}
+
+.sidebar { display:flex; flex-direction:column; gap:1rem; }
+.sidebar-sticky { margin-top:.5rem; padding-top:.8rem; border-top: 1px solid var(--border); }
+
+.section-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.section-header:hover { background: #141c24; }
+.section-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink:0;
+  box-shadow: 0 0 6px currentColor;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: .65rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text);
+  flex:1;
+}
+.section-arrow {
+  font-size: .7rem;
+  color: var(--muted);
+  transition: transform .2s;
+}
+.section-arrow.open { transform: rotate(90deg); }
+
+.section-body { padding: 1rem; display:flex; flex-direction:column; gap:.7rem; }
+.section-body.collapsed { display:none; }
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .5rem;
+}
+.input-row label {
+  font-size: .72rem;
+  color: var(--text);
+  letter-spacing: .03em;
+  line-height: 1.3;
+}
+.input-row label span {
+  display: block;
+  font-size: .6rem;
+  color: #7a9ab0;
+  margin-top:.1rem;
+}
+.input-wrap {
+  display:flex;
+  align-items:center;
+  gap:.3rem;
+}
+input[type=number], select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  padding: .35rem .5rem;
+  width: 80px;
+  text-align: right;
+  outline: none;
+  transition: border-color .15s;
+}
+input[type=number]:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { opacity: 1; }
+select { width: auto; text-align:left; cursor:pointer; }
+.unit {
+  font-size: .65rem;
+  color: var(--muted);
+  white-space: nowrap;
+  width: 28px;
+}
+
+.input-full { display:flex; flex-direction:column; gap:.3rem; }
+.input-full label { font-size:.7rem; color:var(--muted); }
+.input-full select { width:100%; text-align:left; }
+
+.divider { border:none; border-top:1px solid var(--border); margin:.2rem 0; }
+
+@keyframes card-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.run-btn {
+  width: 100%;
+  padding: 1rem 1rem .85rem;
+  background: #e8002d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+  box-shadow: 0 0 18px rgba(232,0,45,0.3);
+}
+.run-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.run-btn:active { transform: scale(.98); filter: brightness(.95); }
+.result-card.pop { animation: card-pop .35s ease-out; }
+
+.main { display:flex; flex-direction:column; gap:1.2rem; }
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .8rem;
+}
+.result-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  position:relative;
+  overflow:hidden;
+  transition: border-color .3s;
+}
+.result-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0;
+  height: 3px;
+  transition: opacity .3s;
+}
+.rc-cyan::before   { background: var(--accent); }
+.rc-orange::before { background: var(--accent2); }
+.rc-green::before  { background: var(--green); }
+.rc-red::before    { background: var(--red); }
+.rc-yellow::before { background: var(--yellow); }
+
+.result-label {
+  font-size: .6rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: .4rem;
+}
+.result-value {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: color .3s;
+}
+.rc-cyan   .result-value { color: var(--accent); text-shadow: 0 0 20px rgba(0,238,255,0.4); }
+.rc-orange .result-value { color: var(--accent2); text-shadow: 0 0 20px rgba(255,122,26,0.4); }
+.rc-green  .result-value { color: var(--green); }
+.rc-red    .result-value { color: var(--red); text-shadow: 0 0 20px rgba(255,51,85,0.4); }
+.rc-yellow .result-value { color: var(--yellow); }
+.result-unit { font-size: .65rem; color: var(--muted); margin-top:.25rem; }
+
+.chart-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.2rem 1.4rem;
+  position:relative;
+}
+.chart-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0;
+  height:3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 12px rgba(0,238,255,0.3);
+}
+.chart-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:1rem; flex-wrap:wrap; gap:.5rem;
+}
+.chart-title { font-size:.62rem; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; }
+.chart-legend { display:flex; gap:1rem; }
+.legend-item { display:flex; align-items:center; gap:.4rem; font-size:.65rem; color:var(--muted); }
+.legend-dot { width:8px; height:8px; border-radius:50%; }
+
+.range-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.4rem;
+}
+.range-note { font-size:.65rem; color:#7a9ab0; line-height:1.6; }
+
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:200px; color:var(--muted2); gap:.8rem;
+}
+.empty-icon { font-size:2.5rem; opacity:.4; }
+.empty-text { font-size:.75rem; letter-spacing:.1em; }
+
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+
+.onboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.2rem 2rem 0;
+}
+.onboard-inner {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.onboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .7rem 1.1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.onboard-header:hover { background: #141c24; }
+.onboard-tag {
+  font-family: var(--font-display);
+  font-size: .58rem;
+  letter-spacing: .2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.onboard-toggle { font-size: .65rem; color: var(--muted); }
+.onboard-body {
+  padding: 1.1rem 1.4rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.onboard-body.hidden { display: none; }
+.step { display: flex; gap: .8rem; align-items: flex-start; }
+.step-num {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--accent);
+  opacity: .3;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 24px;
+}
+.step-title { font-size: .7rem; color: var(--text); font-weight: 600; margin-bottom: .2rem; letter-spacing: .05em; }
+.step-desc { font-size: .65rem; color: var(--muted); line-height: 1.6; }
+.step-tool {
+  display: inline-block;
+  font-size: .58rem;
+  color: var(--accent);
+  border: 1px solid rgba(0,212,255,.3);
+  border-radius: 2px;
+  padding: .1rem .4rem;
+  margin-top: .3rem;
+  letter-spacing: .08em;
+}
+.onboard-note {
+  grid-column: 1 / -1;
+  font-size: .63rem;
+  color: #7a9ab0;
+  border-top: 1px solid var(--border);
+  padding-top: .8rem;
+  line-height: 1.7;
+}
+
+.save-bar { display:flex; flex-direction:column; gap:.4rem; margin-top:.5rem; }
+.save-input {
+  flex:1; background:var(--surface); border:1px solid var(--border2);
+  color:var(--text); font-family:var(--font-mono); font-size:.65rem;
+  padding:.45rem .7rem; border-radius:3px; outline:none;
+}
+.save-input:focus { border-color:var(--accent); }
+.save-input::placeholder { color:var(--muted); }
+.save-btn {
+  font-family:var(--font-display); font-size:.58rem; letter-spacing:.1em;
+  padding:.45rem .9rem; border-radius:6px; cursor:pointer; white-space:nowrap;
+  border:1px solid var(--accent); background:transparent; color:var(--accent);
+  transition:all .2s;
+  box-shadow: 0 0 8px rgba(0,238,255,0.15);
+}
+.save-btn:hover { background:var(--accent); color:#000; box-shadow: 0 0 16px rgba(0,238,255,0.4); transform: translateY(-1px); }
+.mini-btn {
+  font-family:var(--font-display); font-size:.52rem; letter-spacing:.08em;
+  padding:.3rem .6rem; border-radius:3px; cursor:pointer;
+  border:1px solid var(--border2); background:transparent; color:#7a9ab0;
+  transition:all .15s;
+}
+.mini-btn:hover { border-color:var(--accent); color:var(--accent); }
+.mini-btn.danger { border-color:var(--border2); color:var(--muted); }
+.mini-btn.danger:hover { border-color:var(--red); color:var(--red); }
+
+.run-row {
+  display:grid; grid-template-columns:auto 1fr auto auto auto;
+  align-items:center; gap:.5rem;
+  padding:.45rem .5rem; border-bottom:1px solid var(--border);
+  font-size:.65rem;
+}
+.run-row:last-child { border-bottom:none; }
+.run-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.run-name { color:var(--text); font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.run-time { color:var(--accent); font-weight:700; white-space:nowrap; }
+.run-delta { font-size:.62rem; font-weight:700; white-space:nowrap; }
+.run-delta.faster { color:var(--green); }
+.run-delta.slower { color:var(--red); }
+.run-del { cursor:pointer; color:var(--muted); font-size:.7rem; padding:.1rem .3rem; }
+.run-del:hover { color:var(--red); }
+
+.input-wrap input.invalid { border-color:var(--red) !important; }
+
+#validation-banner {
+  display:none; background:rgba(255,51,85,0.12);
+  border:1px solid rgba(255,51,85,0.4);
+  border-radius:3px; padding:.6rem .9rem;
+  font-size:.65rem; color:#ff8899; line-height:1.6;
+  margin-bottom:.5rem;
+}
+#validation-banner.visible { display:block; }
+
+.tip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #1e2a38;
+  border: 1px solid #2a3a4a;
+  color: #7a9ab0;
+  font-size: 10px;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 5px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  padding: 0; line-height: 0; letter-spacing: 0;
+}
+.tip-btn:focus { outline: none; }
+.tip-box {
+  display: none;
+  background: #0d1117;
+  border: 1px solid #1e2a38;
+  border-radius: 4px;
+  padding: .6rem .8rem;
+  font-size: .63rem;
+  color: #c8d8e8;
+  line-height: 1.6;
+  margin-top: .4rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.tip-box.open { display: block; }
+
+.pill-group {
+  display: flex; gap: 0;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+}
+.pill-opt {
+  flex: 1;
+  padding: .5rem .4rem;
+  font-family: var(--font-mono);
+  font-size: .63rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: none;
+  border-right: 1px solid var(--border2);
+  cursor: pointer;
+  text-align: center;
+  transition: background .15s, color .15s;
+  line-height: 1.3;
+}
+.pill-opt:last-child { border-right: none; }
+.pill-opt:hover { background: #151e2a; color: var(--text); }
+.pill-opt.active {
+  background: rgba(0,238,255,0.18);
+  color: var(--accent);
+  font-weight: 700;
+  border-bottom: 2px solid var(--accent);
+}
+
+.styled-select-wrap {
+  position: relative;
+  width: 100%;
+}
+.styled-select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: .7rem; top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  font-size: .7rem;
+  pointer-events: none;
+}
+.styled-select {
+  width: 100%;
+  appearance: none; -webkit-appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  padding: .5rem 2rem .5rem .75rem;
+  cursor: pointer; outline: none;
+  transition: border-color .15s;
+}
+.styled-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.1); }
+.styled-select option { background: #0d1117; color: var(--text); }
+
+.breakdown-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.4rem;
+}
+.breakdown-title { font-size:.62rem; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; margin-bottom:.9rem; }
+.breakdown-row {
+  display:flex; align-items:center; gap:.8rem;
+  padding:.35rem 0; border-bottom:1px solid var(--border);
+  font-size:.72rem;
+}
+.breakdown-row:last-child { border-bottom:none; }
+.bd-label { color:var(--muted); flex:1; }
+.bd-bar-wrap { flex:2; height:4px; background:var(--surface); border-radius:2px; overflow:hidden; }
+.bd-bar { height:100%; border-radius:2px; transition: width .5s; }
+.bd-val { color:var(--text); font-weight:700; width:60px; text-align:right; font-size:.7rem; }
+
+/* Light mode */
+body.light {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --border: #d0dae6;
+  --border2: #b8c8d8;
+  --accent: #0088bb;
+  --accent2: #d44800;
+  --green: #008844;
+  --red: #cc1133;
+  --yellow: #aa8800;
+  --text: #1a2a3a;
+  --muted: #5a7080;
+  --muted2: #c0d0dc;
+}
+body.light .header { border-bottom-color: var(--border); }
+body.light input[type=number], body.light .styled-select { color: var(--text); }
+body.light .rc-cyan .result-value,
+body.light .rc-orange .result-value,
+body.light .rc-red .result-value { text-shadow: none; }
+body.light .chart-card::before { box-shadow: none; }
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: .6rem;
+  padding: .3rem .7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  transition: border-color .15s, color .15s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+#r-delta.faster { background:rgba(0,255,136,0.15); color:var(--green); }
+#r-delta.slower { background:rgba(255,51,85,0.15); color:var(--red); }
+
+#replay-canvas { background: #0a0f14 !important; border: 1px solid var(--border); border-radius: 6px; }
+body.light #replay-canvas { background: #a8b8c8 !important; border: 1px solid #000 !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-title">CO₂ DRAGSTER SIM</div>
+      <div class="logo-sub">Physics-Based Race Time Predictor &nbsp;·&nbsp; v2.0</div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀ Light Mode</button>
+  </div>
+</div>
+
+<div class="onboard">
+  <div class="onboard-inner">
+    <div class="onboard-header" onclick="toggleOnboard(this)">
+      <div class="onboard-tag">▶ How to use this simulator</div>
+      <div class="onboard-toggle" id="onboard-toggle-label">click to collapse</div>
+    </div>
+    <div class="onboard-body" id="onboard-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Weigh your car</div>
+          <div class="step-desc">Fully assembled with axles and wheels, but no CO₂ cartridge. Enter this under Car Body → Total Mass.</div>
+          <span class="step-tool">scale / balance</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Measure your wheels</div>
+          <div class="step-desc">Diameter (front and rear), mass of each wheel individually. Wheels are modelled as solid discs for rotational inertia.</div>
+          <span class="step-tool">callipers + scale</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Measure frontal area &amp; Cd</div>
+          <div class="step-desc">Trace the front of your car onto graph paper and count squares. Use the Cd preset closest to your body shape, or enter a measured value.</div>
+          <span class="step-tool">graph paper / wind tunnel</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Select rolling resistance</div>
+          <div class="step-desc">Pick the surface type your car will race on. μr is the rolling resistance coefficient — it captures friction between wheels and track throughout the entire run.</div>
+          <span class="step-tool">track inspection</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Set track length</div>
+          <div class="step-desc">Enter your competition track length. The sim uses a standard 8g Pitsco cartridge with a measured thrust curve — no cartridge setup needed.</div>
+          <span class="step-tool">ruler / tape measure</span>
+        </div>
+      </div>
+      <div class="onboard-note">
+        💡 <strong style="color:var(--text)">Physics model v2:</strong> Uses thrust-proportional CO₂ mass depletion, dynamic effective mass (m_chassis + m_CO₂ + I_wheel/r²), and a direct rolling resistance coefficient (μr × m × g) instead of axle-friction Crr. The sim is most reliable for <strong style="color:var(--text)">comparing designs</strong> rather than predicting exact times.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <div class="sidebar">
+
+    <!-- Car Body -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-dot" style="background:#00d4ff"></div>
+        <div class="section-title">Car Body</div>
+        <div class="section-arrow open">▶</div>
+      </div>
+      <div class="section-body">
+        <div class="input-row">
+          <label>Total Mass <span>With empty cartridge, no CO₂ gas</span></label>
+          <div class="input-wrap"><input type="number" id="mass" value="80" min="10" max="500" step="0.5"><span class="unit">g</span></div>
+        </div>
+        <div class="input-row">
+          <label>Coefficient of Drag (Cd) <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+          <div class="tip-box">Cd measures how easily air flows around your car. Lower is faster. Most CO₂ dragsters with exposed wheels fall between 0.4 and 0.6.</div>
+          <div class="input-wrap"><input type="number" id="cd-custom" value="0.45" min="0.05" max="1.5" step="0.01"><span class="unit" style="color:var(--muted);font-style:italic;font-size:.55rem;">dim.</span></div>
+        </div>
+        <div class="input-row">
+          <label>Frontal Area <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+          <div class="tip-box">Cross-section area head-on. In Fusion 360: sketch on the front face, use Project to trace the outline, then check the sketch area in the bottom-right corner.</div>
+          <div class="input-wrap"><input type="number" id="frontal-override" value="2000" min="100" max="10000" step="10"><span class="unit">mm²</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wheels -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-dot" style="background:#ff6b00"></div>
+        <div class="section-title">Wheels</div>
+        <div class="section-arrow open">▶</div>
+      </div>
+      <div class="section-body">
+      <div class="section-body">
+        <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.2rem;">Front Wheels</div>
+        <div class="input-row">
+          <label>Diameter</label>
+          <div class="input-wrap"><input type="number" id="wf-dia" value="31" min="5" max="80" step="0.5"><span class="unit">mm</span></div>
+        </div>
+        <div class="input-row">
+          <label>Mass (each)</label>
+          <div class="input-wrap"><input type="number" id="wf-mass" value="3" min="0.1" max="30" step="0.1"><span class="unit">g</span></div>
+        </div>
+        <hr class="divider">
+        <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.2rem;">Rear Wheels</div>
+        <div class="input-row">
+          <label>Diameter</label>
+          <div class="input-wrap"><input type="number" id="wr-dia" value="38" min="5" max="80" step="0.5"><span class="unit">mm</span></div>
+        </div>
+        <div class="input-row">
+          <label>Mass (each)</label>
+          <div class="input-wrap"><input type="number" id="wr-mass" value="3" min="0.1" max="30" step="0.1"><span class="unit">g</span></div>
+        </div>
+        <hr class="divider">
+        <div class="input-row">
+          <label>Axle Bore Diameter <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+          <div class="tip-box">The diameter of the hole through the centre of each wheel. Measure with callipers. PLA wheels are modelled as annular discs: I = ½m(R_outer² + R_bore²). A larger bore pushes mass further from the axis, increasing rotational inertia. Typical 1/8&quot; steel axle → bore ≈ 3.2–3.5 mm.</div>
+          <div class="input-wrap"><input type="number" id="bore-dia" value="3.4" min="0.5" max="15" step="0.05"><span class="unit">mm</span></div>
+        </div>
+        <div style="font-size:.6rem;color:var(--muted);line-height:1.6;margin-top:.2rem;">
+          I = ½m(R² + r_bore²) · same bore applied to all four wheels
+        </div>
+      </div>
+    </div>
+
+    <!-- Axles -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-dot" style="background:#c084fc"></div>
+        <div class="section-title">Axles</div>
+        <div class="section-arrow open">▶</div>
+      </div>
+      <div class="section-body">
+        <div class="input-full">
+          <label>Axle Setup <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+          <div class="tip-box">
+            <strong>Wheels spin / axle fixed:</strong> The axle is glued or press-fit into the car body and does not rotate. Only the wheels spin — axle inertia adds nothing.<br><br>
+            <strong>Axle spins with wheels:</strong> The axle is free to rotate and turns with the wheels. Both the wheel and axle inertia must be overcome at launch. Solid-cylinder axle: I = ½mr², contributing an extra ½m_axle effective mass per axle.
+          </div>
+          <div class="pill-group">
+            <button class="pill-opt active" data-target="axle-setup" data-value="static" onclick="setPill(this);updateAxleSetup()">Wheels spin<br><span style="font-size:.55rem;opacity:.7;">axle stays fixed</span></button>
+            <button class="pill-opt" data-target="axle-setup" data-value="dynamic" onclick="setPill(this);updateAxleSetup()">Axle spins<br><span style="font-size:.55rem;opacity:.7;">rotates with wheels</span></button>
+          </div>
+          <input type="hidden" id="axle-setup" value="static">
+        </div>
+
+        <!-- Dynamic-only options -->
+        <div id="axle-dynamic-opts" style="display:none;">
+          <div style="font-size:.6rem;color:var(--muted);margin:.2rem 0 .6rem;line-height:1.5;">
+            Solid cylinder: I = ½mr² → effective mass penalty per axle = ½m_axle.<br>
+            Two axles total: adds m_axle to m_eff.
+          </div>
+          <div class="input-row">
+            <label>Axle Diameter <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+            <div class="tip-box">Outside diameter of the spinning axle rod. Standard CO₂ dragster axles are 1/8" (3.175 mm) steel. Measure with callipers if unsure.</div>
+            <div class="input-wrap"><input type="number" id="axle-dia" value="3.175" min="1" max="10" step="0.025"><span class="unit">mm</span></div>
+          </div>
+          <div class="input-row">
+            <label>Axle Mass <span>one axle</span></label>
+            <div class="input-wrap"><input type="number" id="axle-mass" value="4.0" min="0.5" max="30" step="0.1"><span class="unit">g</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rolling Resistance -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-dot" style="background:#00ff88"></div>
+        <div class="section-title">Rolling Resistance</div>
+        <div class="section-arrow open">▶</div>
+      </div>
+      <div class="section-body">
+        <div class="input-full">
+          <label>Surface &amp; Wheel Type <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+          <div class="tip-box">Rolling resistance coefficient (μr) captures energy lost as wheels flex and deform against the track. Acts as a constant force throughout the run: F_roll = μr × m × g. Smooth aluminium gives the lowest values; jointed sheet-metal adds significant penalty.</div>
+          <div class="styled-select-wrap">
+            <select id="mu-r-preset" class="styled-select" onchange="applyMuPreset()">
+              <option value="0.010">Plastic wheels · Aluminium track</option>
+              <option value="0.013">Plastic wheels · Wood / MDF track</option>
+              <option value="0.018">Plastic wheels · Jointed sheet metal</option>
+              <option value="0.008">Urethane wheels · Aluminium track</option>
+              <option value="custom">Custom μr value…</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-row" id="mu-r-custom-row" style="display:none">
+          <label>Custom μr <button class="tip-btn" onclick="toggleTip(this)">?</button></label>
+          <div class="tip-box">Dimensionless rolling resistance coefficient. Typical CO₂ dragster range: 0.006–0.025. Lower = faster. Standard competition value on aluminium track is ~0.010.</div>
+          <div class="input-wrap"><input type="number" id="mu-r-custom" value="0.010" min="0.001" max="0.1" step="0.001" oninput="syncCustomMuR()"><span class="unit"></span></div>
+        </div>
+        <input type="hidden" id="mu-r" value="0.010">
+        <div style="font-size:.6rem;color:var(--muted);line-height:1.6;margin-top:.2rem;">
+          F<sub>roll</sub> = μr × m(t) × g — updates each step as CO₂ mass depletes.
+        </div>
+      </div>
+    </div>
+
+    <!-- CO₂ & Environment -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-dot" style="background:#ffd600"></div>
+        <div class="section-title">CO₂ &amp; Environment</div>
+        <div class="section-arrow open">▶</div>
+      </div>
+      <div class="section-body">
+        <div style="font-size:.6rem;color:var(--muted);line-height:1.6;">
+          Standard 8g CO₂ cartridge. Thrust curve fitted to Pitsco 8g measured data.
+        </div>
+        <input type="hidden" id="nozzle-dia" value="2.95">
+        <input type="hidden" id="co2-F0" value="18.3">
+        <input type="hidden" id="co2-tau" value="0.117">
+        <input type="hidden" id="co2-dur" value="0.45">
+        <hr class="divider">
+        <div class="input-row">
+          <label>Track Length</label>
+          <div class="input-wrap"><input type="number" id="track" value="20" min="5" max="100" step="0.5"><span class="unit">m</span></div>
+        </div>
+        <div style="font-size:.6rem;color:var(--muted);margin-top:.4rem;line-height:1.5;">
+          Assumes smooth, flat surface. CO₂ mass depletes proportionally to instantaneous thrust (thrust-impulse method), conserving total impulse.
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-sticky">
+      <div id="validation-banner"></div>
+      <button class="run-btn" onclick="runSim()">🏁 RUN SIMULATION</button>
+      <div class="save-bar">
+        <div style="display:flex;gap:.5rem;align-items:center;width:100%;">
+          <input type="text" id="run-label" placeholder="Label this run…" class="save-input"/>
+          <input type="color" id="run-colour" value="#00d4ff" title="Pick run colour" style="width:32px;height:32px;padding:2px;border:1px solid var(--border2);border-radius:3px;background:var(--surface);cursor:pointer;flex-shrink:0;">
+        </div>
+        <button class="save-btn" id="save-btn" onclick="saveRun()" style="width:100%;margin-top:.4rem;opacity:.4;cursor:not-allowed;" disabled>💾 Save Run — run simulation first</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <div class="main">
+
+    <!-- Results -->
+    <div class="results-grid">
+      <div class="result-card rc-cyan">
+        <div class="result-label">Predicted Finish Time</div>
+        <div style="display:flex;align-items:baseline;gap:.6rem;">
+          <div class="result-value" id="r-time">—</div>
+          <div id="r-delta" style="display:none;font-family:var(--font-mono);font-size:.8rem;font-weight:700;padding:.15rem .4rem;border-radius:3px;"></div>
+        </div>
+        <div class="result-unit">seconds · see model note below</div>
+      </div>
+      <div class="result-card rc-orange">
+        <div class="result-label">Peak Speed</div>
+        <div class="result-value" id="r-speed">—</div>
+        <div class="result-unit">m/s · <span id="r-kmh">—</span> km/h</div>
+      </div>
+      <div class="result-card rc-red">
+        <div class="result-label">Peak Accel</div>
+        <div class="result-value" id="r-g">—</div>
+        <div class="result-unit">G's at launch · <span id="r-ms2">—</span> m/s²</div>
+      </div>
+    </div>
+
+    <!-- Speed/Distance Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Speed &amp; Distance vs Time</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#00d4ff"></div>Speed (m/s)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff6b00"></div>Distance (m)</div>
+        </div>
+      </div>
+      <div id="chart-empty" class="empty-state">
+        <div class="empty-icon">◎</div>
+        <div class="empty-text">Configure inputs and run simulation</div>
+      </div>
+      <canvas id="chart" style="display:none"></canvas>
+    </div>
+
+    <!-- Thrust Curve -->
+    <div class="chart-card" id="thrust-card" style="display:none">
+      <div class="chart-header">
+        <div class="chart-title">CO₂ Thrust Curve</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#ff3355"></div>Thrust (N)</div>
+        </div>
+      </div>
+      <canvas id="thrust-chart"></canvas>
+    </div>
+
+    <!-- Race Replay -->
+    <div class="chart-card" id="replay-card" style="display:none">
+      <div class="chart-header">
+        <div class="chart-title">Race Replay</div>
+        <div style="display:flex;gap:.6rem;align-items:center;">
+          <div id="replay-time-display" style="display:flex;flex-direction:column;gap:.2rem;align-items:flex-end;"></div>
+          <button class="mini-btn" id="replay-btn" onclick="startReplay()">▶ Play</button>
+          <button class="mini-btn danger" onclick="clearAllRuns()">✕ Clear All</button>
+        </div>
+      </div>
+      <canvas id="replay-canvas" height="90" style="width:100%;border-radius:4px;display:block;background:#0a0f14;"></canvas>
+      <div id="replay-runs-legend" style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.6rem;"></div>
+    </div>
+
+    <!-- Model note -->
+    <div class="range-card" id="range-card" style="display:none">
+      <div class="range-note" id="range-note"></div>
+    </div>
+
+    <!-- Forces Breakdown -->
+    <div class="breakdown-card" id="forces-card" style="display:none">
+      <div class="breakdown-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>What's slowing your car down?</span>
+        <span style="font-size:.58rem;color:#7a9ab0;cursor:pointer;text-decoration:underline;font-family:var(--font-mono);font-weight:400;letter-spacing:.05em;text-transform:none;" onclick="toggleForcesExplain()">explain these forces</span>
+      </div>
+      <div id="forces-explain" style="display:none;font-size:.63rem;color:#7a9ab0;line-height:1.7;background:var(--surface);border-radius:3px;padding:.6rem .8rem;margin-bottom:.8rem;">
+        <strong style="color:var(--text);">At launch</strong> the car is stationary so air drag is zero. All resistance comes from <em>wheel spin-up</em> — the rotational inertia of the wheels acting as additional effective mass. PLA wheels are modelled as annular discs: I = ½m(R_outer² + R_bore²), so I/R² = ½m(1 + (R_bore/R)²). A larger bore increases the penalty above the solid-disc baseline.<br><br>
+        <strong style="color:var(--text);">Rolling resistance</strong> acts as a constant force throughout the entire run: F_roll = μr × m(t) × g. It decreases slightly as the CO₂ cartridge empties and total mass falls. This is the primary variable you control through wheel-track surface choice.<br><br>
+        <strong style="color:var(--text);">At peak speed</strong> air drag dominates — it grows with the square of velocity and becomes the single largest resistive force the car fights at high speed. This is where aerodynamic body shaping and frontal area reduction pay the biggest dividends.
+      </div>
+
+      <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;">At Launch</div>
+      <div class="breakdown-row">
+        <div class="bd-label">Wheel Spin-up</div>
+        <div class="bd-bar-wrap"><div class="bd-bar" id="bar-rot" style="background:var(--yellow);width:0%"></div></div>
+        <div class="bd-val" id="val-rot">—</div>
+      </div>
+
+      <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;margin-top:.6rem;">Throughout Race</div>
+      <div class="breakdown-row">
+        <div class="bd-label">Rolling Resistance</div>
+        <div class="bd-bar-wrap"><div class="bd-bar" id="bar-roll" style="background:var(--green);width:0%"></div></div>
+        <div class="bd-val" id="val-roll">—</div>
+      </div>
+
+      <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;margin-top:.6rem;">At Peak Speed</div>
+      <div class="breakdown-row">
+        <div class="bd-label">Air Resistance</div>
+        <div class="bd-bar-wrap"><div class="bd-bar" id="bar-aero" style="background:var(--accent);width:0%"></div></div>
+        <div class="bd-val" id="val-aero">—</div>
+      </div>
+    </div>
+
+    <!-- Saved Runs -->
+    <div class="breakdown-card" id="saved-runs-card" style="display:none">
+      <div class="breakdown-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Saved Runs</span>
+        <div style="display:flex;gap:.5rem;">
+          <button class="mini-btn danger" onclick="clearAllRuns()">✕ Clear All</button>
+        </div>
+      </div>
+      <div id="saved-runs-list"></div>
+      <div id="time-chart-wrap" style="display:none;margin-top:1rem;">
+        <div style="font-size:.62rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;">Finish Time Comparison</div>
+        <canvas id="time-chart"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $  = id => document.getElementById(id);
+const v  = id => parseFloat($(id).value);
+const G  = 9.81;
+
+function showError(msg) {
+  const b = $('validation-banner');
+  if (b) { b.innerHTML = '⚠ ' + msg; b.classList.add('visible'); setTimeout(() => b.classList.remove('visible'), 4000); }
+}
+
+// ── Canvas chart helpers ───────────────────────────────────────
+function drawSpeedChart(canvas, times, speeds, dists) {
+  const isLight = document.body.classList.contains('light');
+  const PAD = { t:10, r:50, b:32, l:46 };
+  const W = canvas.parentElement.clientWidth || 600;
+  const H = 200;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+
+  const bg       = isLight ? '#f4f7fa' : '#0a0f14';
+  const grid     = isLight ? '#d0dbe6' : '#111820';
+  const cyanLine = isLight ? '#0099bb' : '#00d4ff';
+  const cyanFill = isLight ? 'rgba(0,153,187,0.12)' : 'rgba(0,212,255,0.08)';
+  const orngLine = isLight ? '#cc5500' : '#ff6b00';
+  const orngFill = isLight ? 'rgba(204,85,0,0.10)' : 'rgba(255,107,0,0.07)';
+  const tickX    = isLight ? '#6a7a8a' : '#4a6070';
+
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  const maxV = Math.max(...speeds) * 1.1 || 1;
+  const maxD = Math.max(...dists)  * 1.1 || 1;
+  const maxT = Math.max(...times)  || 1;
+  const tx = t => PAD.l + (t / maxT) * cW;
+  const ty = (val, mx) => PAD.t + cH - (val / mx) * cH;
+
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  for (let i=0; i<=4; i++) {
+    const y = PAD.t + (i/4)*cH;
+    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l+cW, y); ctx.stroke();
+  }
+
+  // Distance
+  ctx.beginPath(); ctx.moveTo(tx(times[0]), ty(dists[0], maxD));
+  for (let i=1; i<times.length; i++) ctx.lineTo(tx(times[i]), ty(dists[i], maxD));
+  ctx.lineTo(tx(times[times.length-1]), PAD.t+cH); ctx.lineTo(tx(times[0]), PAD.t+cH); ctx.closePath();
+  ctx.fillStyle = orngFill; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx(times[0]), ty(dists[0], maxD));
+  for (let i=1; i<times.length; i++) ctx.lineTo(tx(times[i]), ty(dists[i], maxD));
+  ctx.strokeStyle = orngLine; ctx.lineWidth = 2; ctx.stroke();
+
+  // Speed
+  ctx.beginPath(); ctx.moveTo(tx(times[0]), ty(speeds[0], maxV));
+  for (let i=1; i<times.length; i++) ctx.lineTo(tx(times[i]), ty(speeds[i], maxV));
+  ctx.lineTo(tx(times[times.length-1]), PAD.t+cH); ctx.lineTo(tx(times[0]), PAD.t+cH); ctx.closePath();
+  ctx.fillStyle = cyanFill; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx(times[0]), ty(speeds[0], maxV));
+  for (let i=1; i<times.length; i++) ctx.lineTo(tx(times[i]), ty(speeds[i], maxV));
+  ctx.strokeStyle = cyanLine; ctx.lineWidth = 2; ctx.stroke();
+
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillStyle = cyanLine;
+  for (let i=0; i<=4; i++) ctx.fillText((maxV*(4-i)/4).toFixed(1), PAD.l-4, PAD.t+(i/4)*cH);
+  ctx.textAlign = 'left'; ctx.fillStyle = orngLine;
+  for (let i=0; i<=4; i++) ctx.fillText((maxD*(4-i)/4).toFixed(1), PAD.l+cW+4, PAD.t+(i/4)*cH);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = tickX;
+  for (let i=0; i<=5; i++) ctx.fillText((maxT*i/5).toFixed(2)+'s', tx(maxT*i/5), PAD.t+cH+4);
+}
+
+function drawThrustChart(F0, tau, dur) {
+  const card = $('thrust-card'); const canvas = $('thrust-chart');
+  card.style.display = 'block';
+  const isLight = document.body.classList.contains('light');
+  const PAD = { t:10, r:20, b:32, l:46 };
+  const W = canvas.parentElement.clientWidth || 600; const H = 160;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const cW = W-PAD.l-PAD.r, cH = H-PAD.t-PAD.b;
+  ctx.fillStyle = isLight ? '#f4f7fa' : '#0a0f14'; ctx.fillRect(0,0,W,H);
+
+  const pts = [];
+  const totalT = dur + 0.05;
+  for (let t=0; t<=totalT; t+=totalT/200) pts.push({ t, f: t < dur ? F0*Math.exp(-t/tau) : 0 });
+  const maxF = F0 * 1.05; const maxT = totalT;
+  const tx = t => PAD.l + (t/maxT)*cW;
+  const ty = f => PAD.t + cH - (f/maxF)*cH;
+
+  ctx.strokeStyle = isLight ? '#d0dbe6' : '#111820'; ctx.lineWidth=1;
+  for (let i=0;i<=4;i++) {
+    const y = PAD.t+(i/4)*cH;
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.moveTo(tx(pts[0].t), ty(pts[0].f));
+  for (let i=1;i<pts.length;i++) ctx.lineTo(tx(pts[i].t), ty(pts[i].f));
+  ctx.lineTo(tx(pts[pts.length-1].t), PAD.t+cH); ctx.lineTo(tx(pts[0].t), PAD.t+cH); ctx.closePath();
+  ctx.fillStyle = isLight ? 'rgba(255,51,85,0.10)' : 'rgba(255,51,85,0.12)'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx(pts[0].t), ty(pts[0].f));
+  for (let i=1;i<pts.length;i++) ctx.lineTo(tx(pts[i].t), ty(pts[i].f));
+  ctx.strokeStyle = '#ff3355'; ctx.lineWidth=2; ctx.stroke();
+
+  ctx.fillStyle = '#ff3355'; ctx.font='9px monospace';
+  ctx.textAlign='left'; ctx.textBaseline='bottom';
+  ctx.fillText(F0.toFixed(1)+'N peak', tx(0)+4, ty(F0)-2);
+  ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillStyle = isLight ? '#cc3355' : '#ff3355';
+  for (let i=0;i<=4;i++) ctx.fillText((maxF*(4-i)/4).toFixed(1), PAD.l-4, PAD.t+(i/4)*cH);
+  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillStyle = isLight ? '#6a7a8a' : '#4a6070';
+  for (let i=0;i<=4;i++) ctx.fillText((maxT*i/4).toFixed(2)+'s', tx(maxT*i/4), PAD.t+cH+4);
+}
+
+function drawBarChart(canvas, labels, values, colours) {
+  const isLight = document.body.classList.contains('light');
+  const PAD = { t:10, r:16, b:36, l:52 };
+  const W = canvas.parentElement.clientWidth || 400; const H = 140;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+  ctx.fillStyle = isLight ? '#ffffff' : '#0a0f14'; ctx.fillRect(0, 0, W, H);
+  const dataMin = Math.min(...values), dataMax = Math.max(...values);
+  const spread = dataMax - dataMin || 0.001;
+  const minV = dataMin - spread * 0.5, maxV = dataMax + spread * 0.5;
+  const range = maxV - minV;
+  const n = values.length, gap = cW / n, barW = Math.min(60, gap * 0.6);
+  const by = val => PAD.t + cH - ((val - minV) / range) * cH;
+  ctx.strokeStyle = isLight ? '#e0e8f0' : '#111820'; ctx.lineWidth = 1;
+  for (let i=0; i<=3; i++) {
+    const y = PAD.t + (i/3)*cH;
+    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l+cW, y); ctx.stroke();
+    ctx.font = '9px monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = isLight ? '#8a9aaa' : '#7a9ab0';
+    ctx.fillText((minV + range*(3-i)/3).toFixed(4), PAD.l-4, y);
+  }
+  values.forEach((val, i) => {
+    const x = PAD.l + gap*i + gap/2 - barW/2, y = by(val), h = PAD.t+cH-y;
+    ctx.fillStyle = colours[i]+'55'; ctx.strokeStyle = colours[i]; ctx.lineWidth = 2;
+    ctx.fillRect(x, y, barW, h); ctx.strokeRect(x, y, barW, h);
+    ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = isLight ? '#1a2a3a' : '#c8d8e8';
+    ctx.fillText(labels[i].length > 8 ? labels[i].slice(0,7)+'...' : labels[i], x+barW/2, PAD.t+cH+4);
+    ctx.textBaseline = 'bottom'; ctx.fillStyle = colours[i];
+    ctx.fillText(val.toFixed(3)+'s', x+barW/2, y-2);
+  });
+}
+
+// ── UI helpers ─────────────────────────────────────────────────
+function toggleOnboard(hdr) {
+  const body  = $('onboard-body'), label = $('onboard-toggle-label');
+  const hidden = body.classList.toggle('hidden');
+  label.textContent = hidden ? 'click to expand' : 'click to collapse';
+}
+
+function toggleSection(hdr) {
+  const body  = hdr.nextElementSibling;
+  const arrow = hdr.querySelector('.section-arrow');
+  const open  = !body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', open);
+  arrow.classList.toggle('open', !open);
+}
+
+function setPill(btn) {
+  const target = btn.dataset.target, value = btn.dataset.value;
+  btn.closest('.pill-group').querySelectorAll('.pill-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(target).value = value;
+}
+
+function toggleTip(btn) {
+  let box = btn.nextElementSibling;
+  if (!box || !box.classList.contains('tip-box')) {
+    let el = btn.parentElement;
+    while (el) {
+      let sib = el.nextElementSibling;
+      while (sib) { if (sib.classList.contains('tip-box')) { box = sib; break; } sib = sib.nextElementSibling; }
+      if (box) break;
+      el = el.parentElement;
+    }
+  }
+  if (!box) return;
+  const isOpen = box.classList.contains('open');
+  document.querySelectorAll('.tip-box.open').forEach(b => b.classList.remove('open'));
+  if (!isOpen) box.classList.add('open');
+}
+
+function toggleForcesExplain() {
+  const el = $('forces-explain');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateAxleSetup() {
+  const isDynamic = $('axle-setup').value === 'dynamic';
+  $('axle-dynamic-opts').style.display = isDynamic ? 'block' : 'none';
+}
+
+function applyMuPreset() {
+  const sel = $('mu-r-preset');
+  const customRow = $('mu-r-custom-row');
+  if (sel.value === 'custom') {
+    customRow.style.display = 'grid';
+    $('mu-r').value = v('mu-r-custom');
+  } else {
+    customRow.style.display = 'none';
+    $('mu-r').value = sel.value;
+  }
+}
+
+function syncCustomMuR() {
+  $('mu-r').value = v('mu-r-custom');
+}
+
+// ── CO₂ thrust parameters — fixed 8g Pitsco cartridge ─────────
+function updateCO2() {
+  // Fixed measured values for 8g Pitsco cartridge at 20°C
+  $('co2-F0').value  = '18.30';
+  $('co2-tau').value = '0.1174';
+  $('co2-dur').value = '0.45';
+}
+
+// ── Core physics simulation ────────────────────────────────────
+// Matches Python model:
+//   - Thrust-proportional CO₂ mass depletion: dm = (m_CO2_initial/J_total) * F_thrust * dt
+//   - Dynamic effective mass: m_eff = m_chassis + m_CO2 + I_front/r_front² + I_rear/r_rear²
+//   - Rolling resistance: F_roll = μr * m_total * g  (updates each step)
+//   - Air drag: F_drag = ½ρCdAv²
+//   - Solid-disc wheel inertia: I = ½mr²  →  I/r² = ½m  →  2 wheels: m_rot = m_wheel
+function simulate(params) {
+  const {
+    mChassis, mCO2Initial, Cd, A, rho, muR, mRotEff,
+    thrustF0, thrustTau, thrustDur, trackLen
+  } = params;
+
+  // Total impulse for thrust-proportional mass depletion
+  const J_total = thrustF0 * thrustTau * (1 - Math.exp(-thrustDur / thrustTau));
+
+  const dt = 0.0001;
+  let t=0, vel=0, x=0, mCO2=mCO2Initial;
+  let peakV=0, peakA=0;
+  let finishT=null, finishV=null;
+  const sT=[], sV=[], sD=[];
+  let step=0;
+
+  while (x < trackLen && t < 8) {
+    let F_thrust = 0;
+
+    if (t <= thrustDur) {
+      F_thrust = thrustF0 * Math.exp(-t / thrustTau);
+      // Mass depletion proportional to instantaneous thrust (conserves total impulse)
+      const dm = (mCO2Initial / J_total) * F_thrust * dt;
+      mCO2 = Math.max(mCO2 - dm, 0);
+    } else {
+      mCO2 = 0;
+    }
+
+    // Dynamic total & effective mass (inertia still updates as CO₂ depletes)
+    const mTotal = mChassis + mCO2;
+    const mEff   = mTotal + mRotEff;
+
+    // Resistance forces
+    const F_drag = 0.5 * rho * Cd * A * vel * vel;
+    const F_roll = muR * mTotal * G;  // dynamic — updates as CO₂ mass depletes
+
+    // Net acceleration
+    const a = (F_thrust - F_drag - F_roll) / mEff;
+    if (a > peakA) peakA = a;
+
+    vel = Math.max(0, vel + a * dt);
+    if (vel > peakV) peakV = vel;
+    x += vel * dt;
+    t += dt;
+
+    if (finishT === null && x >= trackLen) { finishT = t; finishV = vel; }
+    if (step % 100 === 0) {
+      sT.push(+t.toFixed(3));
+      sV.push(+vel.toFixed(3));
+      sD.push(+x.toFixed(3));
+    }
+    step++;
+  }
+
+  return { finishT, finishV, peakV, peakA, sT, sV, sD };
+}
+
+function buildParams(overrides={}) {
+  // Total mass weighed with empty cartridge inserted — shell is already included.
+  // Only the 8g CO₂ gas depletes during the run.
+  const mChassis    = v('mass') / 1000;
+  const mCO2Initial = 0.008;  // 8g cartridge only
+
+  const Cd = overrides.Cd ?? v('cd-custom');
+  const A  = overrides.A  ?? (v('frontal-override') / 1e6);     // mm² → m²
+
+  // Annular disc (PLA wheel with axle bore): I = ½m(R_outer² + R_bore²)
+  // Rotational effective mass contribution per wheel pair = I/R_outer²:
+  //   2×(I_f/rF²) = 2×½×mWF×(1+(rBore/rF)²) = mWF×(1+(rBore/rF)²)
+  //   same for rear → wheel contribution = mWF×(1+(rBore/rF)²) + mWR×(1+(rBore/rR)²)
+  const mWF   = v('wf-mass') / 1000;
+  const mWR   = v('wr-mass') / 1000;
+  const rF    = v('wf-dia') / 2 / 1000;   // outer radius front (m)
+  const rR    = v('wr-dia') / 2 / 1000;   // outer radius rear  (m)
+  const rBore = v('bore-dia') / 2 / 1000; // bore radius (m)
+  const mRotWheels = mWF * (1 + (rBore/rF)**2) + mWR * (1 + (rBore/rR)**2);
+
+  // Dynamic axle: solid cylinder I = ½mr², I/r² = ½m per axle
+  // Two axles spinning → adds 2×(½m_axle) = m_axle to effective mass
+  const isDynamic = $('axle-setup').value === 'dynamic';
+  const mAxleRot  = isDynamic ? (v('axle-mass') / 1000) * 2 * 0.5 : 0;  // = m_axle_one × 2 × ½
+  const mRotEff   = mRotWheels + mAxleRot;
+
+  const muR = overrides.muR ?? v('mu-r');
+
+  const thrustF0  = overrides.F0  ?? v('co2-F0');
+  const thrustTau = overrides.tau ?? v('co2-tau');
+  const thrustDur = overrides.dur ?? v('co2-dur');
+
+  const tempC = 20;
+  const rho   = 1.225 * (293.15 / (273.15 + tempC));   // ≈ 1.204 at 20°C
+  const trackLen = v('track');
+
+  return { mChassis, mCO2Initial, Cd, A, rho, muR, mRotEff, mWF, mWR, thrustF0, thrustTau, thrustDur, trackLen };
+}
+
+// ── Run simulation & update UI ─────────────────────────────────
+let _prevFinishT = null;
+
+function runSim() {
+  if (!validateInputs()) return;
+
+  const p = buildParams();
+  const r = simulate(p);
+
+  if (!r.finishT) { showError('Car did not finish! Check your parameters.'); return; }
+
+  setTimeout(() => {
+    document.querySelectorAll('.result-card').forEach((el, i) => {
+      setTimeout(() => { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }, i * 80);
+    });
+  }, 300);
+
+  $('r-kmh').textContent = (r.peakV*3.6).toFixed(1);
+  $('r-ms2').textContent = r.peakA.toFixed(1);
+
+  // Forces breakdown — scaled relative to each other
+  const fSpinUp = p.mRotEff * r.peakA;                              // rotational inertia at peak accel
+  const fRoll   = p.muR * (p.mChassis + p.mCO2Initial) * G;        // rolling resistance at run start (max value)
+  const fAero   = 0.5 * p.rho * p.Cd * p.A * r.peakV * r.peakV;   // aero drag at peak speed
+  const maxF    = Math.max(fSpinUp, fRoll, fAero) || 1;
+
+  $('forces-card').style.display = 'block';
+  $('val-rot').textContent  = fSpinUp.toFixed(3) + ' N';
+  $('bar-rot').style.width  = (fSpinUp / maxF * 100).toFixed(0) + '%';
+  $('val-roll').textContent = fRoll.toFixed(3) + ' N';
+  $('bar-roll').style.width = (fRoll / maxF * 100).toFixed(0) + '%';
+  $('val-aero').textContent = fAero.toFixed(3) + ' N';
+  $('bar-aero').style.width = (fAero / maxF * 100).toFixed(0) + '%';
+
+  const tMid = r.finishT;
+  animateValue('r-time',  1.8,        tMid,         600, 4, '');
+  animateValue('r-speed', 0,          r.peakV,      600, 2, '');
+  animateValue('r-g',     0,          r.peakA/9.81, 600, 2, '');
+
+  const badge = $('r-delta');
+  if (_prevFinishT !== null) {
+    const diff = (tMid - _prevFinishT) * 1000;
+    badge.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + 'ms';
+    badge.className   = diff < 0 ? 'faster' : 'slower';
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
+  _prevFinishT = tMid;
+
+  $('range-card').style.display = 'block';
+  $('range-note').innerHTML =
+    `<strong style="color:var(--accent)">${tMid.toFixed(4)}s</strong> predicted finish time<br>` +
+    `<span style="color:var(--muted);font-size:.6rem;line-height:1.7;">` +
+    `Model v2: 8g CO₂ gas depletes proportionally to thrust · dynamic m_eff · annular-disc PLA wheel inertia · μr rolling resistance. ` +
+    `Thrust curve fitted to Pitsco 8g measured data. ` +
+    `Jointed sheet-metal tracks typically run 8–12% slower than predicted. ` +
+    `Use as a relative comparison tool — not an absolute predictor.</span>`;
+
+  $('chart-empty').style.display = 'none';
+  $('chart').style.display = 'block';
+  const cutIdx = r.sT.findIndex(t => t > r.finishT + 0.05);
+  const cut = cutIdx > 0 ? cutIdx : r.sT.length;
+  drawSpeedChart($('chart'), r.sT.slice(0,cut), r.sV.slice(0,cut), r.sD.slice(0,cut));
+
+  window._lastRun = { finishT: r.finishT, displayT: tMid, finishV: r.finishV, peakV: r.peakV, peakA: r.peakA,
+                      sT: r.sT, sV: r.sV, sD: r.sD, trackLen: p.trackLen };
+  const sb = $('save-btn');
+  if (sb) { sb.disabled = false; sb.style.opacity = '1'; sb.style.cursor = 'pointer'; sb.textContent = '💾 Save Run'; }
+
+  updateReplayCard();
+  drawThrustChart(p.thrustF0, p.thrustTau, p.thrustDur);
+}
+
+// ── Saved runs ─────────────────────────────────────────────────
+const RUN_COLOURS = ['#00d4ff','#00ff88','#ffd600','#ff6b00','#ff3355','#c084fc','#fb923c','#34d399'];
+let savedRuns = [];
+
+function saveRun() {
+  if (!window._lastRun) { showError('Run the simulation first.'); return; }
+  const label  = $('run-label').value.trim() || `Run ${savedRuns.length + 1}`;
+  const colour = $('run-colour').value;
+  savedRuns.push({ label, colour, ...window._lastRun, sT: window._lastRun.sT.slice(), sD: window._lastRun.sD.slice() });
+  window._lastRun = null;
+  const sb = $('save-btn');
+  if (sb) { sb.disabled = true; sb.style.opacity = '.4'; sb.style.cursor = 'not-allowed'; sb.textContent = '💾 Save Run — run simulation first'; }
+  $('run-label').value = '';
+  // Advance colour picker to next palette colour for convenience
+  $('run-colour').value = RUN_COLOURS[(savedRuns.length) % RUN_COLOURS.length];
+  renderSavedRuns(); updateReplayCard();
+}
+
+function deleteRun(idx) { savedRuns.splice(idx, 1); renderSavedRuns(); updateReplayCard(); }
+
+function clearAllRuns() {
+  savedRuns = [];
+  $('run-colour').value = RUN_COLOURS[0];
+  renderSavedRuns(); updateReplayCard();
+}
+
+function renderSavedRuns() {
+  const card = $('saved-runs-card'), list = $('saved-runs-list');
+  if (savedRuns.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const refT = savedRuns[0].displayT || savedRuns[0].finishT;
+  list.innerHTML = savedRuns.map((r, i) => {
+    const diff  = (r.displayT || r.finishT) - refT;
+    const sign  = diff > 0 ? '+' : '';
+    const cls   = i === 0 ? '' : (diff < 0 ? 'faster' : 'slower');
+    const delta = i === 0
+      ? '<span style="color:var(--muted);font-size:.6rem;">baseline</span>'
+      : `<span class="run-delta ${cls}">${sign}${(diff*1000).toFixed(1)}ms</span>`;
+    return `<div class="run-row">
+      <div class="run-dot" style="background:${r.colour}"></div>
+      <div class="run-name" title="${r.label}">${r.label}</div>
+      <div class="run-time">${(r.displayT || r.finishT).toFixed(4)}s</div>
+      ${delta}
+      <span class="run-del" onclick="deleteRun(${i})" title="Remove">✕</span>
+    </div>`;
+  }).join('');
+  renderForceChart();
+}
+
+function renderForceChart() {
+  const wrap = $('time-chart-wrap');
+  if (savedRuns.length < 1) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  drawBarChart($('time-chart'), savedRuns.map(r => r.label), savedRuns.map(r => r.displayT || r.finishT), savedRuns.map(r => r.colour));
+}
+
+// ── Animation ──────────────────────────────────────────────────
+function animateValue(id, fromVal, toVal, duration, decimals, suffix) {
+  const el = document.getElementById(id); if (!el) return;
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (fromVal + (toVal - fromVal) * e).toFixed(decimals) + (suffix||'');
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = toVal.toFixed(decimals) + (suffix||'');
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Replay ─────────────────────────────────────────────────────
+let _replayAF = null, _replayRuns = [];
+
+function updateReplayCard() {
+  if (!savedRuns.length) { $('replay-card').style.display = 'none'; return; }
+  $('replay-card').style.display = 'block';
+  _replayRuns = savedRuns.map(r => ({ label: r.label, colour: r.colour, finishT: r.finishT, displayT: r.displayT || r.finishT }));
+  $('replay-runs-legend').innerHTML = _replayRuns.map(r =>
+    `<div style="display:flex;align-items:center;gap:.35rem;font-size:.62rem;color:var(--muted);">
+      <div style="width:10px;height:3px;border-radius:2px;background:${r.colour}"></div>${r.label} — ${r.displayT.toFixed(4)}s
+    </div>`).join('');
+  setTimeout(() => drawReplayFrame(0), 50);
+}
+
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+}
+
+function drawReplayFrame(simT) {
+  const card = $('replay-card'), canvas = $('replay-canvas');
+  if (!canvas || !card) return;
+  const dpr = window.devicePixelRatio || 1;
+  const PAD_L=18, PAD_R=24, LANE_H=22, LANE_GAP=10, nRuns=_replayRuns.length;
+  const cW = card.offsetWidth - 56, cH = 16 + nRuns*(LANE_H+LANE_GAP);
+  if (cW <= 0) return;
+  canvas.style.width=cW+'px'; canvas.style.height=cH+'px';
+  canvas.width=cW*dpr; canvas.height=cH*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const trackW=cW-PAD_L-PAD_R;
+  const isLight=document.body.classList.contains('light');
+  ctx.fillStyle=isLight?'#b0bec8':'#0a0f14'; ctx.fillRect(0,0,cW,cH);
+  _replayRuns.forEach((run,i)=>{
+    const y=8+i*(LANE_H+LANE_GAP);
+    ctx.shadowBlur=0;
+    ctx.fillStyle=isLight?'#ffffff':'rgba(255,255,255,0.05)';
+    rrect(ctx,PAD_L,y,trackW,LANE_H,3); ctx.fill();
+    ctx.strokeStyle=isLight?'#000000':'rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.setLineDash([]);
+    rrect(ctx,PAD_L,y,trackW,LANE_H,3); ctx.stroke();
+    ctx.strokeStyle=isLight?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(PAD_L+trackW,y+2); ctx.lineTo(PAD_L+trackW,y+LANE_H-2); ctx.stroke();
+    ctx.setLineDash([]);
+    const progress=Math.min(simT/run.finishT,1.0);
+    const carX=PAD_L+progress*trackW, carY=y+LANE_H/2, CAR_W=16, CAR_H=10;
+    ctx.shadowColor=run.colour; ctx.shadowBlur=10; ctx.fillStyle=run.colour;
+    rrect(ctx,carX-CAR_W,carY-CAR_H/2,CAR_W,CAR_H,2); ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle=isLight?'#000000':'rgba(255,255,255,0.4)'; ctx.font='8px "Space Mono",monospace';
+    ctx.textBaseline='middle'; ctx.fillText(run.label.slice(0,12),PAD_L+4,y+LANE_H/2);
+  });
+}
+
+function updateReplayTimeDisplay(simT) {
+  const disp=$('replay-time-display'); if(!disp) return;
+  disp.innerHTML=_replayRuns.map(run=>{
+    const done=simT>=run.finishT, col=done?run.colour:'var(--muted)';
+    return `<span style="font-family:var(--font-display);font-size:.7rem;color:${col};">${run.label.slice(0,12)}: ${run.displayT.toFixed(4)}s</span>`;
+  }).join('');
+}
+
+function startReplay() {
+  if (_replayAF) { cancelAnimationFrame(_replayAF); _replayAF=null; }
+  if (!_replayRuns.length) return;
+  const maxT=Math.max(..._replayRuns.map(r=>r.finishT));
+  const REAL_DURATION=2800, startWall=performance.now();
+  const btn=$('replay-btn'); btn.textContent='■ Stop';
+  btn.onclick=()=>{ cancelAnimationFrame(_replayAF); _replayAF=null; btn.textContent='▶ Play'; btn.onclick=startReplay; };
+  let fc=0;
+  function frame(now) {
+    const elapsed=now-startWall, simT=(elapsed/REAL_DURATION)*maxT;
+    drawReplayFrame(Math.min(simT,maxT));
+    if(fc%6===0) updateReplayTimeDisplay(Math.min(simT,maxT));
+    fc++;
+    if(elapsed<REAL_DURATION) { _replayAF=requestAnimationFrame(frame); }
+    else { drawReplayFrame(maxT); updateReplayTimeDisplay(maxT); btn.textContent='↺ Replay'; btn.onclick=startReplay; }
+  }
+  _replayAF=requestAnimationFrame(frame);
+}
+
+// ── Theme toggle ───────────────────────────────────────────────
+function toggleTheme() {
+  const isLight=document.body.classList.toggle('light');
+  $('theme-btn').textContent=isLight?'☾ Dark Mode':'☀ Light Mode';
+  if(window._lastRun && $('chart').style.display!=='none') {
+    const cut=window._lastRun.sT.findIndex(t=>t>window._lastRun.finishT+0.05);
+    const n=cut>0?cut:window._lastRun.sT.length;
+    drawSpeedChart($('chart'),window._lastRun.sT.slice(0,n),window._lastRun.sV.slice(0,n),window._lastRun.sD.slice(0,n));
+  }
+  if(savedRuns&&savedRuns.length>0) renderForceChart();
+  const cv=$('replay-canvas'); if(cv) cv.style.background=isLight?'#b0bec8':'#0a0f14';
+  if(_replayRuns.length) setTimeout(()=>drawReplayFrame(0),20);
+}
+
+// ── Validation ─────────────────────────────────────────────────
+function validateInputs() {
+  const errors=[];
+  const fields=[
+    {id:'mass',             label:'Car mass',             min:10,  max:500  },
+    {id:'frontal-override', label:'Frontal area',         min:100, max:9000 },
+    {id:'wf-dia',           label:'Front wheel diameter', min:5,   max:80   },
+    {id:'wf-mass',          label:'Front wheel mass',     min:0.1, max:30   },
+    {id:'wr-dia',           label:'Rear wheel diameter',  min:5,   max:80   },
+    {id:'wr-mass',          label:'Rear wheel mass',      min:0.1, max:30   },
+    {id:'track',            label:'Track length',         min:5,   max:100  },
+    {id:'bore-dia',         label:'Axle bore diameter',   min:0.5, max:15   },
+    {id:'axle-dia',         label:'Axle diameter',         min:1,   max:10,  onlyIf: () => $('axle-setup').value === 'dynamic' },
+    {id:'axle-mass',        label:'Axle mass',             min:0.5, max:30,  onlyIf: () => $('axle-setup').value === 'dynamic' },
+  ];
+  document.querySelectorAll('.invalid').forEach(el=>el.classList.remove('invalid'));
+  fields.forEach(f=>{
+    if (f.onlyIf && !f.onlyIf()) return;
+    const el=$(f.id); if(!el) return;
+    const val=parseFloat(el.value);
+    if(isNaN(val)||val<=0) { errors.push(`${f.label} can't be zero or empty.`); el.classList.add('invalid'); }
+    else if(val<f.min||val>f.max) { errors.push(`${f.label} looks unusual (entered ${val}, expected ${f.min}–${f.max}).`); el.classList.add('invalid'); }
+  });
+  const cd=parseFloat($('cd-custom').value);
+  if(isNaN(cd)||cd<=0) { errors.push("Coefficient of Drag can't be zero or empty."); $('cd-custom').classList.add('invalid'); }
+  const muR=parseFloat($('mu-r').value);
+  if(isNaN(muR)||muR<=0) { errors.push("Rolling resistance μr can't be zero or empty."); }
+  const banner=$('validation-banner');
+  if(errors.length>0) {
+    banner.innerHTML='⚠ Please fix the following before running:<br>'+errors.map(e=>`• ${e}`).join('<br>');
+    banner.classList.add('visible'); return false;
+  }
+  banner.classList.remove('visible'); return true;
+}
+
+window.addEventListener('load', () => {
+  try { updateCO2(); applyMuPreset(); updateAxleSetup(); } catch(e) { console.warn('Init error:', e); }
+});
+</script>
+</body>
+</html>
