@@ -1451,7 +1451,7 @@ let _prevFinishT = null;
 
 function runSim() {
   if (!validateInputs()) return;
-
+  gtag('event', 'run_simulation', {'event_category': 'engagement'});
   const p = buildParams();
   const r = simulate(p);
 
