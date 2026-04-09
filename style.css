@@ -615,5 +615,5 @@ body.light .chart-card::before { box-shadow: none; }
 #r-delta.faster { background:rgba(0,255,136,0.15); color:var(--green); }
 #r-delta.slower { background:rgba(255,51,85,0.15); color:var(--red); }
 
-#replay-canvas { background: #0a0f14 !important; border: 1px solid var(--border); border-radius: 6px; }
-body.light #replay-canvas { background: #a8b8c8 !important; border: 1px solid #000 !important; }
+#replay-canvas { border: 1px solid var(--border); border-radius: 6px; }
+body.light #replay-canvas { border: 1px solid #000; }
