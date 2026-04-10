@@ -1,4 +1,4 @@
-someone told me I should revise the inertia model here it is // ── Shared constants (also used by ui.js) ─────────────────────
+ // ── Shared constants (also used by ui.js) ─────────────────────
 var $ = function(id) { return document.getElementById(id); };
 var v = function(id) { return parseFloat(document.getElementById(id).value); };
 var G = 9.81;
@@ -115,3 +115,4 @@ function buildParams() {
     mRotEff: mRotEff, thrustF0: thrustF0, thrustTau: thrustTau,
     thrustDur: thrustDur, trackLen: trackLen
   };
+}
