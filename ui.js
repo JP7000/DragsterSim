@@ -279,27 +279,6 @@ function runSim() {
   $('forces-card').style.display = 'block';
   $('val-rot').textContent  = fSpinUp.toFixed(3) + ' N';
   $('bar-rot').style.width  = (fSpinUp / maxF * 100).toFixed(0) + '%';
-  $('val-roll').textContent = fRoll.toFixed(3) + ' N';
-  $('bar-roll').style.width = (fRoll / maxF * 100).toFixed(0) + '%';
-
-  const boreRow = $('bore-friction-row');
-  if (p.muBoreEff > 0) {
-    boreRow.style.display = 'flex';
-    $('val-bore').textContent = fBore.toFixed(3) + ' N';
-    $('bar-bore').style.width = (fBore / maxF * 100).toFixed(0) + '%';
-  } else {
-    boreRow.style.display = 'none';
-  }
-
-   const bodyRow = $('body-bearing-row');
-  if (p.muBodyEff > 0) {
-    bodyRow.style.display = 'flex';
-    $('val-body').textContent = fBody.toFixed(3) + ' N';
-    $('bar-body').style.width = (fBody / maxF * 100).toFixed(0) + '%';
-  } else {
-    bodyRow.style.display = 'none';
-  }
-
   $('val-aero').textContent = fAero.toFixed(3) + ' N';
   $('bar-aero').style.width = (fAero / maxF * 100).toFixed(0) + '%';
 

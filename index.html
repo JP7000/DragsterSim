@@ -392,36 +392,11 @@
     <div class="breakdown-card" id="forces-card">
       <div class="breakdown-title" style="display:flex;justify-content:space-between;align-items:center;">
         <span>What's slowing your car down?</span>
-        <span style="font-size:.58rem;color:#7a9ab0;cursor:pointer;text-decoration:underline;font-family:var(--font-mono);font-weight:400;letter-spacing:.05em;text-transform:none;" onclick="toggleForcesExplain()">explain these forces</span>
-      </div>
-      <div id="forces-explain" style="display:none;font-size:.63rem;color:#7a9ab0;line-height:1.7;background:var(--surface);border-radius:3px;padding:.6rem .8rem;margin-bottom:.8rem;">
-        <strong style="color:var(--text);">At launch</strong> air drag is zero. Resistance is wheel spin-up inertia only — PLA wheels as annular discs: I = ½m(R² + r_bore²).<br><br>
-        <strong style="color:var(--text);">Track rolling resistance</strong> — wheel deformation against the track surface. F = μr × m(t) × g.<br><br>
-        <strong style="color:var(--text);">Bore friction</strong> (static axle) — PLA bore sliding radially on the steel axle. F = μ_bore × m(t) × g × (r_axle/r_wheel). Graphite reduces μ from ~0.25 to ~0.10.<br><br>
-        <strong style="color:var(--text);">Body bearing friction</strong> (dynamic axle) — steel axle spinning in the car body hole. Same formula: F = μ_body × m(t) × g × (r_axle/r_wheel).<br><br>
-        <strong style="color:var(--text);">At peak speed</strong> air drag dominates — grows with v² and is the biggest force to fight at high speed.
-      </div>
-      <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;">At Launch</div>
+        <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;">At Launch</div>
       <div class="breakdown-row">
         <div class="bd-label">Wheel Spin-up</div>
         <div class="bd-bar-wrap"><div class="bd-bar" id="bar-rot" style="background:var(--yellow);width:0%"></div></div>
         <div class="bd-val" id="val-rot">—</div>
-      </div>
-      <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;margin-top:.6rem;">Throughout Race</div>
-      <div class="breakdown-row">
-        <div class="bd-label">Track Rolling</div>
-        <div class="bd-bar-wrap"><div class="bd-bar" id="bar-roll" style="background:var(--green);width:0%"></div></div>
-        <div class="bd-val" id="val-roll">—</div>
-      </div>
-      <div class="breakdown-row" id="bore-friction-row">
-        <div class="bd-label">Bore Friction</div>
-        <div class="bd-bar-wrap"><div class="bd-bar" id="bar-bore" style="background:#c084fc;width:0%"></div></div>
-        <div class="bd-val" id="val-bore">—</div>
-      </div>
-      <div class="breakdown-row" id="body-bearing-row">
-        <div class="bd-label">Body Bearing</div>
-        <div class="bd-bar-wrap"><div class="bd-bar" id="bar-body" style="background:#fb923c;width:0%"></div></div>
-        <div class="bd-val" id="val-body">—</div>
       </div>
       <div style="font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;margin-top:.6rem;">At Peak Speed</div>
       <div class="breakdown-row">
@@ -429,7 +404,6 @@
         <div class="bd-bar-wrap"><div class="bd-bar" id="bar-aero" style="background:var(--accent);width:0%"></div></div>
         <div class="bd-val" id="val-aero">—</div>
       </div>
-    </div>
 
     <div class="breakdown-card" id="saved-runs-card">
       <div class="breakdown-title" style="display:flex;justify-content:space-between;align-items:center;">
