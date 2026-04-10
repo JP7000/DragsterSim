@@ -555,24 +555,14 @@ select { width: auto; text-align:left; cursor:pointer; }
 .styled-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.1); }
 .styled-select option { background: #0d1117; color: var(--text); }
 
-.breakdown-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.1rem 1.4rem;
-  }
-.breakdown-title { font-size:.62rem; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; margin-bottom:.9rem; }
 .breakdown-row {
-  display:flex; align-items:center; gap:.8rem;
-  padding:.35rem 0; border-bottom:1px solid var(--border);
-  font-size:.72rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;                 /* slightly tighter horizontally */
+  padding: .55rem 0;          /* more vertical space */
+  border-bottom: 1px solid var(--border);
+  font-size: .78rem;          /* slightly bigger = more readable */
 }
-.breakdown-row:last-child { border-bottom:none; }
-.bd-label { color:var(--muted); flex:1; }
-.bd-bar-wrap { flex:2; height:4px; background:var(--surface); border-radius:2px; overflow:hidden; }
-.bd-bar { height:100%; border-radius:2px; transition: width .5s; }
-.bd-val { font-size:.65rem; color:var(--muted); white-space:nowrap; min-width:48px; text-align:right; }
-
 /* Light mode */
 body.light {
   --bg: #f0f4f8;
