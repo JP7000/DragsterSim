@@ -560,6 +560,7 @@ select { width: auto; text-align:left; cursor:pointer; }
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.1rem 1.4rem;
+  .breakdown-card { display: flex; flex-direction: column; }
 }
 .breakdown-title { font-size:.62rem; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; margin-bottom:.9rem; }
 .breakdown-row {
@@ -616,4 +617,5 @@ body.light .chart-card::before { box-shadow: none; }
 #r-delta.slower { background:rgba(255,51,85,0.15); color:var(--red); }
 
 #replay-canvas { border: 1px solid var(--border); border-radius: 6px; }
+#replay-card { min-height: 0; }
 body.light #replay-canvas { border: 1px solid #000; }
