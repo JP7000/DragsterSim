@@ -61,7 +61,7 @@ function simulate(params) {
     step++;
   }
 
-  return { finishT: finishT, finishV: finishV, peakV: peakV, peakA: peakA, sT: sT, sV: sV, sD: sD };
+  return { finishT: finishT * 1.1, finishV: finishV, peakV: peakV, peakA: peakA, sT: sT, sV: sV, sD: sD };
 }
 
 function buildParams() {
