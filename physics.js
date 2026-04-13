@@ -5,7 +5,7 @@ var G = 9.81;
 // ── Core physics simulation ────────────────────────────────────
 // Euler integration, dt=0.0001s
 // Forces: thrust (exponential decay) · aero drag · track rolling · bore/body bearing friction
-// Effective mass: chassis + CO2(t) + wheel inertia (annular-disc or user-supplied MOI) + optional solid-cylinder axle inertia
+// Effective mass: chassis + CO2(t) + annular-disc wheel inertia + optional solid-cylinder axle inertia
 function simulate(params) {
   var mChassis    = params.mChassis;
   var mCO2Initial = params.mCO2Initial;
@@ -60,27 +60,13 @@ function buildParams() {
   var mCO2Initial = 0.008;
   var Cd = v('cd-custom');
   var A  = v('frontal-override') / 1e6;
+  var mWF      = v('wf-mass') / 1000;
+  var mWR      = v('wr-mass') / 1000;
   var rF       = v('wf-dia') / 2 / 1000;
   var rR       = v('wr-dia') / 2 / 1000;
   var isDynamic = $('axle-setup').value === 'dynamic';
-  var wheelMode = $('wheel-mode').value;
-  var mRotWheels;
-  if (wheelMode === 'moi') {
-    // User-supplied MOI — convert to kg·m² then reflect into linear space
-    var moiUnit = (typeof _moiUnit !== 'undefined') ? _moiUnit : 'gcm2';
-    var moiFactor = (moiUnit === 'kgm2') ? 1 : 1e-7; // 1 g·cm² = 1e-7 kg·m²
-    var I_F = v('moi-front') * moiFactor; // per front wheel, kg·m²
-    var I_R = v('moi-rear')  * moiFactor; // per rear wheel, kg·m²
-    // 2 front + 2 rear wheels, each reflected: m_rot = I / r²
-    mRotWheels = 2 * I_F / (rF * rF) + 2 * I_R / (rR * rR);
-  } else {
-    // Annular disc: I = ½m(R² + r_bore²), reflected: I/R² = ½m(1 + (r_bore/R)²)
-    // 2 wheels per axle × ½ cancel → mWF * (1 + (rBore/rF)²)
-    var mWF  = v('wf-mass') / 1000;
-    var mWR  = v('wr-mass') / 1000;
-    var rBore = isDynamic ? v('axle-dia') / 2 / 1000 : v('bore-dia') / 2 / 1000;
-    mRotWheels = mWF * (1 + (rBore/rF)*(rBore/rF)) + mWR * (1 + (rBore/rR)*(rBore/rR));
-  }
+  var rBore    = isDynamic ? v('axle-dia') / 2 / 1000 : v('bore-dia') / 2 / 1000;
+  var mRotWheels = mWF * (1 + (rBore/rF)*(rBore/rF)) + mWR * (1 + (rBore/rR)*(rBore/rR));
   var mAxleRot = isDynamic ? (v('axle-mass') / 1000) * 2 * 0.5 : 0;
   var mRotEff  = mRotWheels + mAxleRot;
   var muR = v('mu-r');
