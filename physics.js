@@ -145,8 +145,7 @@ function simulate(params) {
   }
 
   return {
-    // 10% buffer gives clean chart tail after the finish line
-    finishT: finishT !== null ? finishT * 1.1 : null,
+    finishT: finishT !== null ? finishT * 1 : null,
     finishV,
     peakV,
     peakA,
