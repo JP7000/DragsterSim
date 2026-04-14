@@ -1,14 +1,10 @@
-# CO₂ Dragster Simulator
+# AeroTune
 
 link: https://JP7000.github.io/AeroTune/
 
-A physics-based race time predictor for CO₂-powered model dragsters, built as a single self-contained HTML file. No dependencies, no build step — just open it in a browser.
+A physics-based race time predictor for CO₂-powered model dragsters, designed with TSA in mind but pretty solid for STEM Racing(formerly F1 In Schools) too!
 
-## Usage
 
-Open `co2_dragster_sim.html` in any modern browser. No installation required.
-
----
 
 ## How to Use (for students)
 
@@ -20,9 +16,9 @@ Open `co2_dragster_sim.html` in any modern browser. No installation required.
 | Front and rear wheel diameter | Callipers |
 | Front and rear wheel mass (each) | Scale / balance |
 | Axle bore diameter (hole through wheel centre) | Callipers |
-| Frontal area (cross-section of car from the front) | Graph paper or Fusion 360 |
+| Frontal area (cross-section of car from the front) | Fusion 360 |
 | Drag coefficient (Cd) | Fusion 360 / SimScale, or use a shape preset |
-
+| Moment of Inertia (Optional) | Fusion 360 |
 ### Steps
 
 1. **Car Body** — Enter your total car mass. Weigh the car fully assembled with the empty cartridge already inserted, but no CO₂ gas. Enter your Cd and frontal area.
@@ -67,9 +63,9 @@ F_thrust(t) = 0                  for t > t_thrust
 
 | Parameter | Value |
 |---|---|
-| Peak thrust F₀ | 18.3 N |
-| Decay constant τ | 0.1174 s |
-| Thrust duration | 0.45 s |
+| Peak thrust F₀ | 9.2 N |
+| Decay constant τ | 0.25 s |
+| Thrust duration | 0.5 s |
 
 ### CO₂ Mass Depletion
 
@@ -103,6 +99,12 @@ m_rot contribution per wheel pair = m_wheel · (1 + (R_bore/R_outer)²)
 ```
 I_axle = ½mr²  →  m_rot contribution per axle = ½m_axle
 Two axles: adds m_axle_one to m_eff
+```
+**MOI Input**
+
+```
+If you happen to have your moment of inertia from Fusion, there is a custom input that you can put that value into that may provide more accuracy than the annular disc model which can be inaccurate with more complex wheel geometries since it assumes a solid disc.
+
 ```
 
 ### Drag
