@@ -49,7 +49,7 @@ function simulate(params) {
     t += DT;
 
     if (finishT === null && x >= trackLen) {
-      finishT = t * 1.04;
+      finishT = t * 1.1 ;
       finishV = vel;
     }
 
@@ -61,7 +61,7 @@ function simulate(params) {
     step++;
   }
 
-  return { finishT, finishV, peakV, peakA, sT, sV, sD };
+  return {finishT , finishV, peakV, peakA, sT, sV, sD};
 }
 
 function buildParams() {
