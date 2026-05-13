@@ -1,5 +1,5 @@
 /**
- * optimizer.js — AeroTune Optimization Engine v3.2
+ * optimizer.js — AeroTune Optimization Engine v4
  *
  * Responsibilities:
  *   - Ruleset definitions (RULESET)
@@ -17,23 +17,20 @@
  */
 'use strict';
 
-/* ── Optimization thresholds (named for maintainability) ── */
+/* ── Optimization thresholds ── */
 const OPT = {
-  ABEC_MU:            0.001,   // friction coefficient of ABEC 5/7 ball bearing
-  BEARING_UPGRADE_MU: 0.0015,  // current μ above this → suggest ABEC upgrade
-  MIN_WHEEL_MASS_KG:  0.0008,  // practical lower bound for wheel mass (0.8g)
-  WHEEL_MASS_STEP_KG: 0.0008,  // suggestion step for wheel mass reduction (0.8g)
-  WHEEL_MASS_FLOOR_KG:0.0015,  // only suggest if current mass exceeds this (1.5g)
-  BORE_SLOP_WARN_MM:  0.25,    // bore-to-axle gap above this → alignment warning
-  BORE_SLOP_TARGET_MM:0.15,    // ideal bore-to-axle gap
-  BORE_OPT_GAP_MM:    0.15,    // optimal bore gap used in computeOptimalTime
-  MIN_SAVING_S:       0.0001,  // discard suggestions saving less than this (0.1ms)
-  MASS_STEP_G:        3,       // body mass reduction step for suggestion
-  CD_STEP:            0.05,    // Cd improvement step per suggestion
-  CD_REF_TOLERANCE:   0.02,    // only suggest Cd if current > ref + this
-  AREA_REDUCTION:     0.90,    // frontal area reduction factor (10%)
-  AREA_REF_TOLERANCE: 1.05,    // only suggest area if current > ref * this
-  OPTIMAL_WHEEL_MASS_KG: 0.001, // assumed optimal wheel mass for deviation calc (1g)
+  ABEC_MU:             0.001,  // friction coefficient of ABEC 5/7 ball bearing
+  BEARING_UPGRADE_MU:  0.0015, // current μ above this → suggest ABEC upgrade
+  MIN_WHEEL_MASS_KG:   0.0008, // practical lower bound for wheel mass (0.8g)
+  WHEEL_MASS_STEP_KG:  0.0008, // suggestion step for wheel mass reduction (0.8g)
+  WHEEL_MASS_FLOOR_KG: 0.0015, // only suggest if current mass exceeds this (1.5g)
+  BORE_SLOP_WARN_MM:   0.25,   // bore-to-axle gap above this → alignment warning
+  BORE_SLOP_TARGET_MM: 0.15,   // ideal bore-to-axle gap
+  BORE_OPT_GAP_MM:     0.15,   // optimal bore gap used in computeOptimalTime
+  MIN_SAVING_S:        0.0001, // discard suggestions saving less than this (0.1ms)
+  CD_REF_TOLERANCE:    0.02,   // only suggest Cd if current exceeds ref by more than this
+  AREA_REF_TOLERANCE:  1.05,   // only suggest area if current exceeds ref by more than 5%
+  OPTIMAL_WHEEL_MASS_KG: 0.001,// assumed optimal wheel mass for deviation calc (1g)
 };
 
 /* ── Ruleset definitions ── */
@@ -92,9 +89,8 @@ function computeOptimalTime(comp, baseParams) {
   const rF = Math.max(rs.frontWheelDia.min, v('wf-dia')) / 2 / 1000;
   const rR = Math.max(rs.rearWheelDia.min,  v('wr-dia')) / 2 / 1000;
 
-  const rBoreOpt = rAxle + OPT.BORE_OPT_GAP_MM / 1000;
-  const kF = rBoreOpt / rF, kR = rBoreOpt / rR;
-
+  const rBoreOpt  = rAxle + OPT.BORE_OPT_GAP_MM / 1000;
+  const kF        = rBoreOpt / rF, kR = rBoreOpt / rR;
   const mRotOpt   = OPT.OPTIMAL_WHEEL_MASS_KG * (1 + kF * kF) + OPT.OPTIMAL_WHEEL_MASS_KG * (1 + kR * kR);
   const muBoreOpt = OPT.ABEC_MU * (0.40 * rAxle / rF + 0.60 * rAxle / rR);
 
@@ -121,23 +117,25 @@ function computeOptimalTime(comp, baseParams) {
 /**
  * runSensitivity(baseParams, baseT) → result object for renderTuneCard()
  *
- * Runs simulate() up to 6 extra times, each with one parameter improved.
- * Returns sorted candidates and metadata — no DOM writes.
+ * For each parameter, simulates convergence all the way to the ruleset
+ * reference baseline (not a fixed incremental step), so the user sees
+ * the full time on the table, not a partial picture.
  *
  * Priority order (per optimization spec):
  *   1. Bearing / rolling friction
  *   2. Rotational inertia
- *   3. Body mass
+ *   3. Body mass       → converges to rs.minMassG
  *   4. Alignment / tolerance  (qualitative — no simulated delta)
- *   5. Aerodynamic drag
+ *   5. Cd              → converges to rs.ref_Cd
+ *   5. Frontal area    → converges to rs.ref_A_mm2
  */
 function runSensitivity(baseParams, baseT) {
   // ── DOM reads — isolated here, not scattered through helpers ──
   const isDynamic = $('axle-setup').value === 'dynamic';
   const isMoi     = $('wheel-mode').value === 'moi';
-  const comp      = ($('competition') || {value: 'tsa'}).value;
+  const comp      = ($('competition') || { value: 'tsa' }).value;
   const rs        = RULESET[comp] || RULESET.tsa;
-  const wfDia     = v('wf-dia'), wrDia = v('wr-dia');
+  const wfDia     = v('wf-dia'),  wrDia  = v('wr-dia');
   const curMassG  = v('mass');
   const curMuBore = parseFloat($('mu-bore').value);
   const curCd     = v('cd-custom');
@@ -167,7 +165,7 @@ function runSensitivity(baseParams, baseT) {
 
   const candidates = [];
 
-  // 1. Bearing upgrade
+  // 1. Bearing upgrade — converges to ABEC 5/7 (physical best)
   if (!isDynamic && curMuBore > OPT.BEARING_UPGRADE_MU) {
     const newMuBoreEff = OPT.ABEC_MU * (0.40 * rAxle / rF + 0.60 * rAxle / rR);
     const saved = testTweak({ muRTotal: baseParams.muR + newMuBoreEff });
@@ -176,14 +174,14 @@ function runSensitivity(baseParams, baseT) {
       : 'F1iS T7.12: wheel support systems may be sourced from a supplier.';
     if (saved > OPT.MIN_SAVING_S) candidates.push({
       priority: 1,
-      title:  'Upgrade to ABEC 5/7 competition ball bearings',
+      title:   'Upgrade to ABEC 5/7 competition ball bearings',
       saved,
-      detail: `Current bearing μ = ${curMuBore} → ABEC 5/7 μ = ${OPT.ABEC_MU}. Press-fit into wheel hub, standard 3.175mm axle. ${cite}`,
-      color:  'var(--accent)',
+      detail:  `Current bearing μ = ${curMuBore} → ABEC 5/7 μ = ${OPT.ABEC_MU}. Press-fit into wheel hub, standard 3.175mm axle. ${cite}`,
+      color:   'var(--accent)',
     });
   }
 
-  // 2. Lighter wheels
+  // 2. Lighter wheels — converges to practical minimum (OPT.MIN_WHEEL_MASS_KG)
   if (!isMoi) {
     const wfM   = v('wf-mass'), wrM = v('wr-mass');
     const rBore = v('bore-dia') / 2 / 1000;
@@ -197,27 +195,27 @@ function runSensitivity(baseParams, baseT) {
         : 'F1iS T7: no material restriction. Must meet T7.5 diameter (28–32mm) and T7.4 contact width.';
       if (saved > OPT.MIN_SAVING_S) candidates.push({
         priority: 2,
-        title:  `Lighter wheels — F: ${wfM}g → ${(wfM - OPT.WHEEL_MASS_STEP_KG * 1000).toFixed(1)}g, R: ${wrM}g → ${(wrM - OPT.WHEEL_MASS_STEP_KG * 1000).toFixed(1)}g each`,
+        title:   `Lighter wheels — F: ${wfM}g → ${(wfM - OPT.WHEEL_MASS_STEP_KG * 1000).toFixed(1)}g, R: ${wrM}g → ${(wrM - OPT.WHEEL_MASS_STEP_KG * 1000).toFixed(1)}g each`,
         saved,
-        detail: `Reduce wall thickness, add spoke cutouts. ${cite}`,
-        color:  'var(--accent2)',
+        detail:  `Reduce wall thickness, add spoke cutouts. ${cite}`,
+        color:   'var(--accent2)',
       });
     }
   }
 
-  // 3. Body mass reduction
-  if (curMassG - OPT.MASS_STEP_G >= rs.minMassG) {
-    const saved    = testTweak({ mChassis: (curMassG - OPT.MASS_STEP_G) / 1000 + CARTRIDGE_SHELL_KG });
-    const headroom = (curMassG - rs.minMassG).toFixed(1);
-    const cite     = comp === 'tsa'
-      ? `TSA 2026 Body rule 4: min 50g without CO₂. You have ${headroom}g of headroom.`
-      : `F1iS T3.6: min 48g without cartridge. ${headroom}g headroom. Ballast legal via halo container (T1.22).`;
+  // 3. Body mass — converges fully to legal minimum (rs.minMassG)
+  const headroomG = curMassG - rs.minMassG;
+  if (headroomG > 0) {
+    const saved = testTweak({ mChassis: rs.minMassG / 1000 + CARTRIDGE_SHELL_KG });
+    const cite  = comp === 'tsa'
+      ? `TSA 2026 Body rule 4: minimum 50g without CO₂.`
+      : `F1iS T3.6: minimum 48g without cartridge. Ballast legal via halo container (T1.22).`;
     if (saved > OPT.MIN_SAVING_S) candidates.push({
       priority: 3,
-      title:  `Reduce body mass by ${OPT.MASS_STEP_G}g  (${curMassG}g → ${curMassG - OPT.MASS_STEP_G}g)`,
+      title:   `Reduce body mass by ${headroomG.toFixed(1)}g  (${curMassG}g → ${rs.minMassG}g minimum)`,
       saved,
-      detail: `Hollow non-structural sections, reduce wall count, increase infill cavities. ${cite}`,
-      color:  'var(--yellow)',
+      detail:  `Hollow non-structural sections, reduce wall count, increase infill cavities. ${cite}`,
+      color:   'var(--yellow)',
     });
   }
 
@@ -226,43 +224,43 @@ function runSensitivity(baseParams, baseT) {
     const slop = v('bore-dia') - v('axle-dia-static');
     if (slop > OPT.BORE_SLOP_WARN_MM) candidates.push({
       priority: 4,
-      title:  `Tighten axle bore tolerance  (gap: ${slop.toFixed(2)} mm)`,
-      saved:  0,
-      detail: `${slop.toFixed(2)}mm bore-to-axle gap causes lateral wheel wobble — energy loss not captured by this model but measurable on track. Target < ${OPT.BORE_SLOP_TARGET_MM}mm. Use a precision reamer. Legal in both rulesets.`,
-      color:  'var(--purple)',
+      title:   `Tighten axle bore tolerance  (gap: ${slop.toFixed(2)} mm)`,
+      saved:   0,
+      detail:  `${slop.toFixed(2)}mm bore-to-axle gap causes lateral wheel wobble — energy loss not captured by this model but measurable on track. Target < ${OPT.BORE_SLOP_TARGET_MM}mm. Use a precision reamer. Legal in both rulesets.`,
+      color:   'var(--purple)',
       qualitative: true,
     });
   }
 
-  // 5a. Cd reduction
+  // 5a. Cd — converges fully to rs.ref_Cd (reference baseline)
   if (curCd > rs.ref_Cd + OPT.CD_REF_TOLERANCE) {
-    const newCd = Math.max(rs.ref_Cd, curCd - OPT.CD_STEP);
-    const saved = testTweak({ Cd: newCd });
+    const saved = testTweak({ Cd: rs.ref_Cd });
+    const pctAbove = ((curCd - rs.ref_Cd) / rs.ref_Cd * 100).toFixed(0);
     const cite  = comp === 'tsa'
       ? 'TSA Body rule 1c: no airfoils, canopy, or fenders. Improvement via body shaping only.'
       : 'F1iS: wings (T8/T9) are separate legal aero components. Body must be CNC-machined from Model Block (T4.1).';
     if (saved > OPT.MIN_SAVING_S) candidates.push({
       priority: 5,
-      title:  `Improve aero profile — Cd ${curCd.toFixed(2)} → ${newCd.toFixed(2)}  (ref: ${rs.ref_Cd})`,
+      title:   `Close aero gap — Cd ${curCd.toFixed(2)} → ${rs.ref_Cd} (${rs.shortName} reference baseline)`,
       saved,
-      detail: `Cd is ${((curCd - rs.ref_Cd) / rs.ref_Cd * 100).toFixed(0)}% above the ${rs.shortName} reference baseline. ${cite}`,
-      color:  'var(--red)',
+      detail:  `Currently ${pctAbove}% above the ${rs.shortName} reference. Elongate nose, smooth body–wheel transitions, reduce frontal wheel exposure. ${cite}`,
+      color:   'var(--red)',
     });
   }
 
-  // 5b. Frontal area reduction
+  // 5b. Frontal area — converges fully to rs.ref_A_mm2 (reference baseline)
   if (curAmm2 > rs.ref_A_mm2 * OPT.AREA_REF_TOLERANCE) {
-    const targetA = Math.max(rs.ref_A_mm2, curAmm2 * OPT.AREA_REDUCTION);
-    const saved   = testTweak({ A: targetA / 1e6 });
-    const cite    = comp === 'tsa'
+    const saved     = testTweak({ A: rs.ref_A_mm2 / 1e6 });
+    const pctAbove  = ((curAmm2 - rs.ref_A_mm2) / rs.ref_A_mm2 * 100).toFixed(0);
+    const cite      = comp === 'tsa'
       ? 'Must stay within 90mm total width (TSA rule 6) and 42mm body width at axle (rule 5).'
       : 'Must stay within 65–85mm total width (F1iS T3.4) and maintain 1.5mm track clearance (T3.7).';
     if (saved > OPT.MIN_SAVING_S) candidates.push({
       priority: 5,
-      title:  `Reduce frontal area  (${curAmm2.toFixed(0)} → ${targetA.toFixed(0)} mm²,  ref: ${rs.ref_A_mm2} mm²)`,
+      title:   `Close frontal area gap — ${curAmm2.toFixed(0)} → ${rs.ref_A_mm2} mm² (${rs.shortName} reference baseline)`,
       saved,
-      detail: `Slim the body cross-section or reduce wheel protrusion. ${cite}`,
-      color:  'var(--red)',
+      detail:  `Currently ${pctAbove}% above the ${rs.shortName} reference. Slim the body cross-section or reduce wheel protrusion. ${cite}`,
+      color:   'var(--red)',
     });
   }
 
