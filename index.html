@@ -32,7 +32,7 @@
     <div class="logo">
       <div class="logo-eyebrow">Physics Simulator</div>
       <div class="logo-title"><span class="logo-aero">AERO</span>TUNE</div>
-      <div class="logo-sub">CO₂ Dragster Race Time Predictor &nbsp;·&nbsp; v3.1</div>
+      <div class="logo-sub">CO₂ Dragster Race Time Predictor &nbsp;·&nbsp; v4</div>
     </div>
     <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">☀ Light Mode</button>
   </div>
@@ -50,13 +50,21 @@
       <div class="step">
         <div class="step-num">01</div>
         <div class="step-content">
+          <div class="step-title">Pick your ruleset</div>
+          <div class="step-desc">Select TSA or F1 in Schools at the top of the sidebar. This controls legal limits, reference baselines, and which tuning suggestions are valid for your competition.</div>
+          <span class="step-tool">sidebar → competition</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
           <div class="step-title">Weigh your car</div>
           <div class="step-desc">Weigh fully assembled with axles and wheels, <strong>without</strong> the CO₂ cartridge. The 23g empty shell is added automatically.</div>
           <span class="step-tool">scale / balance</span>
         </div>
       </div>
       <div class="step">
-        <div class="step-num">02</div>
+        <div class="step-num">03</div>
         <div class="step-content">
           <div class="step-title">Measure your wheels</div>
           <div class="step-desc">Diameter (front and rear), mass of each wheel, and axle bore diameter. Modelled as annular discs — or enter a measured MOI directly.</div>
@@ -64,23 +72,23 @@
         </div>
       </div>
       <div class="step">
-        <div class="step-num">03</div>
+        <div class="step-num">04</div>
         <div class="step-content">
           <div class="step-title">Frontal area &amp; Cd</div>
-          <div class="step-desc">Trace the front face onto graph paper and count squares. Use the Cd preset closest to your body shape, or enter a wind tunnel value.</div>
+          <div class="step-desc">Trace the front face onto graph paper and count squares. Use ruleset reference values as a starting point, or enter a wind tunnel value.</div>
           <span class="step-tool">graph paper / tunnel</span>
         </div>
       </div>
       <div class="step">
-        <div class="step-num">04</div>
+        <div class="step-num">05</div>
         <div class="step-content">
           <div class="step-title">Rolling resistance</div>
-          <div class="step-desc">Pick your track surface and wheel type. μr captures tyre-deformation losses throughout the run.</div>
+          <div class="step-desc">Leave at <strong>0.010</strong> unless you've measured your specific setup. Only change if you have a timed roll-out value for your track and wheel combination.</div>
           <span class="step-tool">track inspection</span>
         </div>
       </div>
       <div class="step">
-        <div class="step-num">05</div>
+        <div class="step-num">06</div>
         <div class="step-content">
           <div class="step-title">Set track length</div>
           <div class="step-desc">Enter your competition distance. The sim uses a standard 8g Pitsco cartridge with a fitted thrust curve — no cartridge setup needed.</div>
@@ -105,6 +113,29 @@
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar">
 
+    <!-- Competition Ruleset — always visible, no collapse -->
+    <div class="section-card" style="border-color:rgba(0,212,255,.3);">
+      <div class="section-header" style="cursor:default;pointer-events:none;background:rgba(0,212,255,.06);">
+        <div class="section-dot" style="background:var(--accent)"></div>
+        <div class="section-title" style="color:var(--accent);">Competition Ruleset</div>
+      </div>
+      <div class="section-body">
+        <div class="pill-group" role="group" aria-label="Competition ruleset">
+          <button class="pill-opt active" data-target="competition" data-value="tsa" onclick="setPill(this); onCompetitionChange()">
+            TSA<br><span style="font-size:.52rem;opacity:.65;text-transform:none;letter-spacing:0;">National 2026</span>
+          </button>
+          <button class="pill-opt" data-target="competition" data-value="f1is" onclick="setPill(this); onCompetitionChange()">
+            F1 in Schools<br><span style="font-size:.52rem;opacity:.65;text-transform:none;letter-spacing:0;">World Finals 2026</span>
+          </button>
+        </div>
+        <input type="hidden" id="competition" value="tsa">
+        <div class="input-note" id="comp-note">
+          TSA 2026 · min 50g body mass · plastic wheels only · no aero add-ons<br>
+          ref baseline: Cd 0.40 · A 1300 mm²
+        </div>
+      </div>
+    </div>
+
     <!-- Car Body -->
     <div class="section-card">
       <div class="section-header" onclick="toggleSection(this)">
@@ -122,7 +153,7 @@
         </div>
         <div class="input-row">
           <label for="cd-custom">Coefficient of Drag (Cd)<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-          <div class="tip-box" role="tooltip">Cd measures how easily air flows around your car. Lower is faster. Most CO₂ dragsters with exposed wheels fall between 0.4 and 0.6.</div>
+          <div class="tip-box" role="tooltip">Cd measures how easily air flows around your car. Lower is faster. TSA reference baseline: 0.40. F1iS Infinitude reference baseline: 0.27.</div>
           <div class="input-wrap">
             <input type="number" id="cd-custom" value="0.45" min="0.05" max="1.5" step="0.01">
             <span class="unit" style="color:var(--muted);font-style:italic;font-size:.53rem;">dim.</span>
@@ -130,7 +161,7 @@
         </div>
         <div class="input-row">
           <label for="frontal-override">Frontal Area<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-          <div class="tip-box" role="tooltip">Cross-section area head-on. In Fusion 360: sketch on the front face, use Project to trace the outline, then check the sketch area in the bottom-right corner.</div>
+          <div class="tip-box" role="tooltip">Cross-section area head-on. In Fusion 360: sketch on the front face, use Project to trace the outline, then check the sketch area in the bottom-right corner. TSA reference: 1300 mm². F1iS Infinitude reference: 1700 mm².</div>
           <div class="input-wrap">
             <input type="number" id="frontal-override" value="2000" min="100" max="10000" step="10">
             <span class="unit">mm²</span>
@@ -169,7 +200,7 @@
         <hr class="divider">
         <div class="input-full">
           <label>Wheel Inertia Model<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-          <div class="tip-box" role="tooltip">Annular disc calculates MOI from geometry — good for simple printed wheels. Custom MOI is more accurate for wheels with spokes, variable infill, or non-uniform wall thickness.</div>
+          <div class="tip-box" role="tooltip">Annular disc calculates MOI from geometry. Custom MOI is more accurate for spoked or non-uniform wheels.</div>
           <div class="pill-group" role="group" aria-label="Wheel inertia model">
             <button class="pill-opt active" data-target="wheel-mode" data-value="annular" onclick="setPill(this); toggleWheelMode()">
               Annular Disc<br><span style="font-size:.52rem;opacity:.65;text-transform:none;letter-spacing:0;">I = ½m(R²+r²)</span>
@@ -183,7 +214,7 @@
         <div id="annular-opts">
           <div class="input-row">
             <label for="bore-dia">Axle Bore Diameter<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-            <div class="tip-box" role="tooltip">Diameter of the hole through the centre of each wheel. I = ½m(R_outer² + R_bore²). Typical 1/8″ steel axle → bore ≈ 3.2–3.5 mm.</div>
+            <div class="tip-box" role="tooltip">Diameter of the hole through the centre of each wheel. I = ½m(R_outer² + R_bore²). Typical 1/8″ axle → bore ≈ 3.2–3.5 mm.</div>
             <div class="input-wrap"><input type="number" id="bore-dia" value="3.4" min="0.5" max="15" step="0.05"><span class="unit">mm</span></div>
           </div>
           <div class="input-note">I = ½m(R² + r_bore²) · applied to all four wheels</div>
@@ -220,8 +251,8 @@
         <div class="input-full">
           <label>Axle Setup<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
           <div class="tip-box" role="tooltip">
-            <strong>Wheels spin / axle fixed:</strong> Standard for F1 in Schools. Axle is press-fit into the body — only wheels spin.<br><br>
-            <strong>Axle spins with wheels:</strong> Both wheel and axle inertia must be overcome at launch. Solid-cylinder model: I = ½mr².
+            <strong>Wheels spin / axle fixed:</strong> Standard. Axle press-fit into body — only wheels spin.<br><br>
+            <strong>Axle spins with wheels:</strong> Both wheel and axle inertia overcome at launch. I = ½mr².
           </div>
           <div class="pill-group" role="group" aria-label="Axle setup">
             <button class="pill-opt active" data-target="axle-setup" data-value="static" onclick="setPill(this); updateAxleSetup()">
@@ -241,7 +272,7 @@
           </div>
           <div class="input-full">
             <label>Axle Bearing Type<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-            <div class="tip-box" role="tooltip">F1 in Schools cars use ball bearings pressed into the wheel hub. The wheel spins around the fixed axle with the bearing inner race on the axle surface.</div>
+            <div class="tip-box" role="tooltip">Competition cars use ball bearings pressed into the wheel hub. The wheel spins around the fixed axle with the bearing inner race on the axle surface.</div>
             <div class="styled-select-wrap">
               <select id="mu-bore-preset" class="styled-select" onchange="applyMuBorePreset()">
                 <option value="0.001">Ball bearing — ABEC 5/7 (competition)</option>
@@ -267,7 +298,7 @@
           <div class="input-note" style="margin-bottom:.45rem;">Axle rotates with wheels — no bore sliding friction. Inertia penalty plus body bearing friction where the axle sits in the car body.</div>
           <div class="input-row">
             <label for="axle-dia">Axle Diameter<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-            <div class="tip-box" role="tooltip">Outside diameter of the spinning axle. Standard 1/8" = 3.175 mm. Used for rotational inertia and body bearing friction calculations.</div>
+            <div class="tip-box" role="tooltip">Outside diameter of the spinning axle. Standard 1/8" = 3.175 mm.</div>
             <div class="input-wrap"><input type="number" id="axle-dia" value="3.175" min="1" max="10" step="0.025"><span class="unit">mm</span></div>
           </div>
           <div class="input-row">
@@ -304,26 +335,17 @@
         <div class="section-arrow open" aria-hidden="true">▶</div>
       </div>
       <div class="section-body">
-        <div class="input-full">
-          <label>Surface &amp; Wheel Type<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-          <div class="tip-box" role="tooltip">Rolling resistance (μr) captures energy lost as wheels deform against the track. F_roll = μr × m × g. Smooth aluminium gives lowest values.</div>
-          <div class="styled-select-wrap">
-            <select id="mu-r-preset" class="styled-select" onchange="applyMuPreset()">
-              <option value="0.010">Plastic wheels · Aluminium track</option>
-              <option value="0.013">Plastic wheels · Wood / MDF track</option>
-              <option value="0.018">Plastic wheels · Jointed sheet metal</option>
-              <option value="0.008">Urethane wheels · Aluminium track</option>
-              <option value="custom">Custom μr value…</option>
-            </select>
+        <div class="input-row">
+          <label for="mu-r-direct">Rolling Resistance μr<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
+          <div class="tip-box" role="tooltip">Dimensionless rolling resistance coefficient. Typical values: 0.008 (urethane/aluminium) · 0.010 (plastic/aluminium) · 0.013 (plastic/wood) · 0.018 (plastic/jointed metal). Leave at default unless you have measured data.</div>
+          <div class="input-wrap">
+            <input type="number" id="mu-r-direct" value="0.010" min="0.001" max="0.1" step="0.001"
+                   oninput="document.getElementById('mu-r').value=this.value">
+            <span class="unit" style="color:var(--muted);font-style:italic;font-size:.53rem;">dim.</span>
           </div>
         </div>
-        <div class="input-row" id="mu-r-custom-row" style="display:none;">
-          <label for="mu-r-custom">Custom μr<button class="tip-btn" onclick="toggleTip(this)" aria-label="Help">?</button></label>
-          <div class="tip-box" role="tooltip">Dimensionless rolling resistance. Typical CO₂ dragster range: 0.006–0.025.</div>
-          <div class="input-wrap"><input type="number" id="mu-r-custom" value="0.010" min="0.001" max="0.1" step="0.001" oninput="syncCustomMuR()"></div>
-        </div>
         <input type="hidden" id="mu-r" value="0.010">
-        <div class="input-note">F_roll = μr × m(t) × g — updates each step as CO₂ mass depletes.</div>
+        <div class="input-note">F_roll = μr × m(t) × g · range 0.006–0.025 · updates each step as CO₂ depletes.</div>
       </div>
     </div>
 
@@ -365,7 +387,7 @@
       </div>
     </div>
 
-  </aside><!-- /sidebar -->
+  </aside>
 
   <!-- ══ MAIN ══ -->
   <main class="main">
@@ -401,7 +423,7 @@
                 aria-expanded="false">explain</button>
       </div>
       <div id="forces-explain" style="display:none;font-size:.62rem;color:var(--muted);line-height:1.75;background:var(--surface);border-radius:3px;padding:.55rem .75rem;margin-bottom:.75rem;">
-        <strong style="color:var(--text);font-weight:700;">At launch</strong> — air drag is zero. Resistance is entirely wheel spin-up inertia: F = m_rot_eff × a_launch, where m_rot_eff = Σ(I / r²).<br><br>
+        <strong style="color:var(--text);font-weight:700;">At launch</strong> — air drag is zero. Resistance is entirely wheel spin-up inertia: F = m_rot_eff × a_launch.<br><br>
         <strong style="color:var(--text);font-weight:700;">At peak speed</strong> — air drag dominates, growing with v². This is the main force limiting your top speed.
       </div>
       <div id="forces-empty-state" style="font-size:.6rem;color:var(--muted);text-align:center;padding:.75rem 0;letter-spacing:.06em;font-family:var(--font-display);text-transform:uppercase;">
@@ -421,6 +443,18 @@
           <div class="bd-val" id="val-aero">—</div>
         </div>
       </div>
+    </div>
+
+    <!-- Tune suggestions -->
+    <div class="breakdown-card" id="tune-card" style="display:none;">
+      <div class="breakdown-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>⚡ Tuning Opportunities</span>
+        <span id="tune-deviation-badge" style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;"></span>
+      </div>
+      <div class="tune-note" id="tune-note"></div>
+      <div id="tune-warnings"></div>
+      <div id="tune-list"></div>
+      <div id="tune-footer" style="display:none;margin-top:.75rem;padding-top:.6rem;border-top:1px solid var(--border);font-size:.58rem;font-family:var(--font-mono);color:var(--muted);line-height:1.9;"></div>
     </div>
 
     <!-- Speed & Distance chart -->
@@ -521,6 +555,7 @@
 </div>
 
 <script src="physics.js"></script>
+<script src="optimizer.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

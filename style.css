@@ -1,4 +1,3 @@
-
 /* AeroTune — STEM Racing Design System v3.1 */
 
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -87,7 +86,6 @@ body {
   line-height: 1;
   text-transform: uppercase;
 }
-/* Highlight AERO in accent color */
 .logo-title .logo-aero { color: var(--accent); }
 
 .logo-sub {
@@ -135,28 +133,45 @@ body {
 .onboard-header:hover { background: #1A1A1A; }
 .onboard-tag { font-family: var(--font-display); font-size: .55rem; font-weight: 700; letter-spacing: .22em; color: var(--accent); text-transform: uppercase; }
 .onboard-toggle { font-size: .6rem; color: var(--muted); font-family: var(--font-mono); }
+
+/* ── Onboarding body: 5-column card grid ── */
 .onboard-body {
-  padding: 1.1rem 1.4rem;
+  padding: 1rem 1.2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: .7rem;
+  align-items: start;
 }
 .onboard-body.hidden { display: none; }
-.onboard-note { grid-column: 1/-1; font-size: .6rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: .75rem; line-height: 1.8; font-family: var(--font-mono); }
+.onboard-note {
+  grid-column: 1 / -1;
+  font-size: .6rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: .75rem;
+  line-height: 1.8;
+  font-family: var(--font-mono);
+}
 
-.step { display: flex; gap: .7rem; align-items: flex-start; }
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .75rem .85rem;
+}
 .step-num {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 900;
   color: var(--accent);
-  opacity: .35;
+  opacity: .3;
   line-height: 1;
-  flex-shrink: 0;
-  width: 30px;
   letter-spacing: -.02em;
 }
-.step-title { font-family: var(--font-display); font-size: .65rem; font-weight: 700; color: var(--text); margin-bottom: .25rem; letter-spacing: .05em; text-transform: uppercase; }
+.step-title { font-family: var(--font-display); font-size: .65rem; font-weight: 700; color: var(--text); margin-bottom: .15rem; letter-spacing: .05em; text-transform: uppercase; }
 .step-desc { font-size: .63rem; color: var(--muted); line-height: 1.65; font-family: var(--font-body); }
 .step-tool {
   display: inline-block;
@@ -169,6 +184,17 @@ body {
   margin-top: .3rem;
   letter-spacing: .06em;
   text-transform: uppercase;
+}
+
+/* Responsive onboarding grid */
+@media (max-width: 1050px) {
+  .onboard-body { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 650px) {
+  .onboard-body { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 400px) {
+  .onboard-body { grid-template-columns: 1fr; }
 }
 
 /* ── Section cards ── */
@@ -374,6 +400,75 @@ input[type='number'].invalid { border-color: var(--red) !important; box-shadow: 
 .bd-bar { height:100%; border-radius:2px; transition:width .5s; }
 .bd-val { min-width:52px; text-align:right; font-size:.64rem; font-family:var(--font-mono); color:var(--text); white-space:nowrap; }
 
+/* ── Tune suggestions card ── */
+#tune-card { flex-direction: column; }
+.tune-note {
+  font-size: .6rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  line-height: 1.65;
+  margin-bottom: .75rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--border);
+}
+.tune-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: .7rem;
+  align-items: start;
+  padding: .65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.tune-row:last-child { border-bottom: none; }
+.tune-rank {
+  font-family: var(--font-display);
+  font-size: .7rem;
+  font-weight: 900;
+  color: var(--accent);
+  opacity: .45;
+  line-height: 1.3;
+  padding-top: .05rem;
+}
+.tune-title {
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-body);
+  margin-bottom: .22rem;
+  letter-spacing: .01em;
+}
+.tune-detail {
+  font-size: .6rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  line-height: 1.65;
+}
+.tune-impact {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.25;
+  padding-top: .05rem;
+}
+.tune-pct {
+  font-size: .55rem;
+  font-weight: 400;
+  opacity: .7;
+  margin-top: .1rem;
+}
+.tune-badge {
+  font-size: .54rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border: 1px solid;
+  border-radius: 2px;
+  padding: .1rem .38rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
 /* ── Saved runs ── */
 .run-row { display:grid; grid-template-columns:auto 1fr auto auto auto; align-items:center; gap:.45rem; padding:.42rem .45rem; border-bottom:1px solid var(--border); font-size:.64rem; }
 .run-row:last-child { border-bottom:none; }
@@ -442,6 +537,7 @@ body.light .rc-amber .result-value { color: var(--accent2); }
 body.light .run-btn { color: #000; box-shadow: 0 2px 12px rgba(0,153,204,.22); }
 body.light .pill-opt.active { background: rgba(0,153,204,.10); color: var(--accent); border-bottom-color: var(--accent); }
 body.light .step-num { color: var(--accent); }
+body.light .step { background: #F0F0F0; border-color: #E0E0E0; }
 
 /* ── Responsive tablet ── */
 @media (max-width: 900px) {
@@ -470,4 +566,5 @@ body.light .step-num { color: var(--accent); }
   .input-row label { font-size: .64rem; }
   .unit { font-size: .56rem; width: 20px; }
   .run-row { grid-template-columns: auto 1fr auto auto; font-size: .58rem; gap: .28rem; }
+  .tune-row { grid-template-columns: 18px 1fr auto; gap: .45rem; }
 }
