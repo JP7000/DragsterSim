@@ -77,7 +77,7 @@ function simulate(params) {
     t += DT;
 
     if (finishT === null && x >= trackLen) {
-      finishT = t;
+      finishT = t * .95;
       finishV = vel;
     }
     if (step % SAMPLE_N === 0) {
