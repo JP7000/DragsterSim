@@ -36,7 +36,7 @@ const OPT = {
 /* ── Ruleset definitions ── */
 const RULESET = {
   tsa: {
-    name:      'TSA National 2026',
+    name:      'TSA Nationals 2026',
     shortName: 'TSA',
     // Reference aerodynamic baseline — anchor for deviation calc, not a constraint target
     ref_Cd:    0.40,
@@ -51,8 +51,8 @@ const RULESET = {
     bearingsAllowed: true, // Axles rule 5
   },
   f1is: {
-    name:      'F1iS World Finals 2026',
-    shortName: 'F1iS',
+    name:      'STEM Racing World Finals 2026',
+    shortName: 'STEM Racing',
     // Infinitude aerodynamic reference baseline (2022 F1iS World Champions, Australia)
     ref_Cd:    0.27,
     ref_A_mm2: 1700,
